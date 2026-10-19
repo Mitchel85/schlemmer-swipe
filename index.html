@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍳 Königliches Menü-Tinder</title>
     <style>
         :root {
@@ -80,6 +80,10 @@
             padding: 20px;
             text-shadow: 0 2px 8px rgba(0,0,0,0.5);
             pointer-events: none;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            max-width: 100%;
+            text-align: center;
         }
         .stamp {
             position: absolute;
@@ -281,8 +285,19 @@
             "Linsensuppe", "Bohnensuppe mit Eierkuchen", "Wikingertopf"
         ];
 
-        let meals = JSON.parse(localStorage.getItem('princessMeals')) || [...defaultMeals];
+        let meals;
+        try {
+            const stored = localStorage.getItem('princessMeals');
+            const parsed = stored ? JSON.parse(stored) : null;
+            meals = Array.isArray(parsed) ? parsed : [...defaultMeals];
+        } catch (e) {
+            meals = [...defaultMeals];
+        }
         let currentMeal = "";
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
 
         function hasRecipe(name) { return name in recipes; }
 
@@ -291,6 +306,7 @@
             container.innerHTML = '';
             
             if(meals.length === 0) {
+                currentMeal = "";
                 container.innerHTML = '<div class="tinder-card"><div class="meal-text">Kochbuch ist leer!</div></div>';
                 return;
             }
@@ -304,7 +320,7 @@
             card.innerHTML = `
                 <div class="stamp stamp-nope" id="stamp-nope">NÄÄÄ!</div>
                 <div class="stamp stamp-like" id="stamp-like">LECKER!</div>
-                <div class="meal-text">${indicator} ${currentMeal}</div>
+                <div class="meal-text">${indicator} ${esc(currentMeal)}</div>
             `;
             container.appendChild(card);
 
@@ -312,13 +328,14 @@
         }
 
         function initSwipe(card) {
-            let startX = 0, currentX = 0, isDragging = false;
+            let startX = 0, currentX = 0, isDragging = false, moved = false;
             const stampNope = card.querySelector('#stamp-nope');
             const stampLike = card.querySelector('#stamp-like');
             const threshold = 100;
 
             card.addEventListener('pointerdown', (e) => {
                 isDragging = true;
+                moved = false;
                 startX = e.clientX;
                 card.style.transition = 'none';
             });
@@ -326,6 +343,7 @@
             document.addEventListener('pointermove', (e) => {
                 if (!isDragging) return;
                 currentX = e.clientX - startX;
+                if (Math.abs(currentX) > 6) moved = true;
                 const rotate = currentX * 0.05;
                 card.style.transform = `translate(${currentX}px, 0) rotate(${rotate}deg)`;
                 stampLike.style.opacity = currentX > 20 ? currentX / 100 : 0;
@@ -335,6 +353,17 @@
             document.addEventListener('pointerup', (e) => {
                 if (!isDragging) return;
                 isDragging = false;
+
+                if (!moved) {
+                    // Tippen (ohne Ziehen) öffnet das Rezept.
+                    card.style.transition = 'transform 0.3s ease-out';
+                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                    stampLike.style.opacity = 0;
+                    stampNope.style.opacity = 0;
+                    currentX = 0;
+                    if (currentMeal) showRecipe();
+                    return;
+                }
 
                 if (currentX > threshold) {
                     // Swipe Rechts = MATCH → Rezept anzeigen
@@ -359,7 +388,7 @@
         // Button-Hilfen
         function swipeRight() {
             const card = document.querySelector('.tinder-card');
-            if (!card) return;
+            if (!card || !currentMeal) return;
             card.style.transition = 'transform 0.4s ease-out';
             card.style.transform = `translate(${window.innerWidth}px, 0) rotate(30deg)`;
             setTimeout(showRecipe, 300);
@@ -374,6 +403,7 @@
 
         // === RECIPE DISPLAY ===
         function showRecipe() {
+            if (!currentMeal) return;
             document.body.classList.add('scrollable');
             document.getElementById('tinder-screen').style.display = 'none';
             const recipeScreen = document.getElementById('recipe-screen');
@@ -385,12 +415,12 @@
             if (recipe) {
                 // Zutaten
                 const ingrList = document.getElementById('recipe-ingredients');
-                ingrList.innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
+                ingrList.innerHTML = recipe.ingredients.map(i => `<li>${esc(i)}</li>`).join('');
                 document.getElementById('recipe-ingredients-section').style.display = 'block';
 
                 // Zubereitung
                 const instrList = document.getElementById('recipe-instructions');
-                instrList.innerHTML = recipe.instructions.map(i => `<li>${i}</li>`).join('');
+                instrList.innerHTML = recipe.instructions.map(i => `<li>${esc(i)}</li>`).join('');
                 document.getElementById('recipe-instructions-section').style.display = 'block';
             } else {
                 document.getElementById('recipe-ingredients-section').style.display = 'none';
@@ -420,7 +450,14 @@
             meals.forEach((meal, index) => {
                 const li = document.createElement('li');
                 const hasData = hasRecipe(meal);
-                li.innerHTML = `<span>${hasData ? '📖' : '❓'} ${meal}</span> <button class="del-btn" onclick="removeMeal(${index})">❌</button>`;
+                const span = document.createElement('span');
+                span.textContent = `${hasData ? '📖' : '❓'} ${meal}`;
+                const btn = document.createElement('button');
+                btn.className = 'del-btn';
+                btn.textContent = '❌';
+                btn.addEventListener('click', () => removeMeal(index));
+                li.appendChild(span);
+                li.appendChild(btn);
                 listContainer.appendChild(li);
             });
         }
