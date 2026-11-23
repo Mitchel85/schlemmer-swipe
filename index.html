@@ -3,142 +3,542 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍳 Königliches Menü-Tinder</title>
+    <title>🍽️ Schlemmer-Swipe – Familienküche</title>
+    <meta name="description" content="Schlemmer-Swipe – Familienküche: Über 65 kindgerechte Familiengerichte spielerisch durchwischen, nach Kategorien und Zubereitungszeit filtern und direkt nachkochen.">
     <style>
         :root {
-            --bg-color: #2b003b;
-            --text-color: #fff;
-            --accent-pink: #ff66b2;
-            --accent-gold: #ffd700;
-            --swipe-left: #ff4d4d;
-            --swipe-right: #00cc66;
+            --bg-dark: #1f0933;
+            --bg-mid: #381254;
+            --card-bg-1: #521978;
+            --card-bg-2: #350d4f;
+            --text-color: #ffffff;
+            --text-muted: #f3c6e2;
+            --accent-pink: #ff5ca8;
+            --accent-gold: #ffd13b;
+            --accent-cyan: #4deeea;
+            --swipe-left: #ff4d5e;
+            --swipe-right: #18d27b;
+            --panel-bg: rgba(24, 6, 40, 0.88);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
-            background: linear-gradient(135deg, var(--bg-color), #4a0e4e);
+            font-family: 'Segoe UI', 'Chalkboard SE', 'Comic Sans MS', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at top, #4b1670 0%, var(--bg-dark) 75%);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 10px;
+            padding: 12px 12px 52px 12px;
             text-align: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
-        /* Inside HA iframe → space for view tabs */
-        body.embedded { padding-top: 60px; }
-        /* Allow scrolling in recipe mode */
-        body.scrollable { overflow-y: auto; overflow-x: hidden; }
+        body.embedded { padding-top: 58px; }
+
         .stars {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: -1;
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
-            background-repeat: repeat; background-size: 200px 200px;
-            animation: twinkle 4s infinite linear;
+            background-image:
+                radial-gradient(2px 2px at 25px 35px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 60px 90px, rgba(255,209,59,0.7), rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 110px 170px, rgba(255,155,210,0.6), rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 160px 50px, rgba(255,255,255,0.8), rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 220px 220px;
+            animation: twinkle 5s infinite ease-in-out;
         }
-        @keyframes twinkle { 0% {opacity:0.5;} 50% {opacity:1;} 100% {opacity:0.5;} }
+        @keyframes twinkle { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.95; } }
 
-        h1 { margin: 10px 0; font-size: 2em; color: var(--accent-gold); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .subtitle { font-size: 1em; color: #ffb3d9; margin-bottom: 15px; }
+        /* === HEADER & TOP BAR === */
+        .app-shell {
+            width: 100%;
+            max-width: 560px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .pill-btn {
+            background: rgba(255, 255, 255, 0.11);
+            border: 1.5px solid rgba(255, 209, 59, 0.55);
+            color: var(--accent-gold);
+            padding: 6px 13px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.18s ease;
+        }
+        .pill-btn:hover {
+            background: rgba(255, 209, 59, 0.18);
+            transform: translateY(-1px);
+        }
+        .pill-btn.active {
+            background: var(--accent-gold);
+            color: #25083b;
+        }
+        .counter-badge {
+            background: rgba(0,0,0,0.35);
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            color: #fff;
+        }
+        .pill-btn.active .counter-badge {
+            background: #25083b;
+            color: var(--accent-gold);
+        }
 
-        /* === TINDER SCREEN === */
-        #tinder-screen { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; }
-        .tinder-container {
+        h1 {
+            margin: 4px 0 2px 0;
+            font-size: clamp(1.6rem, 5vw, 2.15rem);
+            color: var(--accent-gold);
+            text-shadow: 0 3px 10px rgba(0,0,0,0.45);
+            letter-spacing: 0.3px;
+        }
+        .subtitle {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        /* === FILTER CHIPS === */
+        .filter-bar {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .filter-chip {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #f9e6f3;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .filter-chip:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+        .filter-chip.active {
+            background: linear-gradient(135deg, var(--accent-pink), #ff2e8b);
+            border-color: var(--accent-gold);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(255, 92, 168, 0.4);
+        }
+        .deck-status {
+            font-size: 0.8rem;
+            color: #d7b2eb;
+            margin-bottom: 4px;
+        }
+
+        /* === SWIPE DECK === */
+        #swipe-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .card-stage {
             position: relative;
             width: 100%;
-            height: 380px;
+            height: 365px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 10px 0;
+            margin: 4px 0 10px 0;
         }
-        .tinder-card {
+        .meal-card {
             position: absolute;
-            width: 90%;
-            max-width: 400px;
-            height: 340px;
-            background: linear-gradient(145deg, #5c1a6e, #3d0f4a);
-            border-radius: 20px;
+            width: 94%;
+            max-width: 430px;
+            height: 350px;
+            background: linear-gradient(155deg, var(--card-bg-1), var(--card-bg-2));
+            border-radius: 24px;
             border: 3px solid var(--accent-gold);
+            padding: 20px 18px;
             display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
             cursor: grab;
             user-select: none;
             touch-action: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 14px 35px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.2);
         }
-        .meal-text {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: var(--accent-gold);
-            padding: 20px;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        .meal-card:active { cursor: grabbing; }
+
+        .card-top-meta {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
             pointer-events: none;
-            overflow-wrap: anywhere;
-            word-break: break-word;
-            max-width: 100%;
-            text-align: center;
         }
+        .cat-tag {
+            background: rgba(255, 209, 59, 0.16);
+            border: 1px solid rgba(255, 209, 59, 0.55);
+            color: var(--accent-gold);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .time-tag {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .card-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            pointer-events: none;
+            padding: 0 6px;
+        }
+        .meal-emoji {
+            font-size: 3.4rem;
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+        }
+        .meal-title {
+            font-size: clamp(1.4rem, 4.5vw, 1.85rem);
+            font-weight: 800;
+            color: var(--accent-gold);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+        .meal-teaser {
+            font-size: 0.88rem;
+            color: #f3d4eb;
+            max-width: 340px;
+            line-height: 1.35;
+        }
+
+        .card-bottom-meta {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            pointer-events: none;
+        }
+        .kids-rating {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255,255,255,0.14);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            color: #ffe89e;
+            align-self: center;
+        }
+        .badge-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .mini-badge {
+            font-size: 0.72rem;
+            background: rgba(255, 92, 168, 0.22);
+            border: 1px solid rgba(255, 92, 168, 0.45);
+            color: #ffd6ea;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
         .stamp {
             position: absolute;
-            top: 30px;
-            font-size: 2.8em;
+            top: 52px;
+            font-size: 2.35rem;
             font-weight: 900;
-            padding: 10px 20px;
-            border: 5px solid;
-            border-radius: 15px;
+            padding: 6px 16px;
+            border: 4px solid;
+            border-radius: 14px;
             opacity: 0;
             pointer-events: none;
             text-transform: uppercase;
+            z-index: 5;
+            background: rgba(20, 5, 34, 0.75);
         }
-        .stamp-nope { color: var(--swipe-left); border-color: var(--swipe-left); right: 20px; transform: rotate(15deg); }
-        .stamp-like { color: var(--swipe-right); border-color: var(--swipe-right); left: 20px; transform: rotate(-15deg); }
+        .stamp-nope { color: var(--swipe-left); border-color: var(--swipe-left); right: 18px; transform: rotate(14deg); }
+        .stamp-like { color: var(--swipe-right); border-color: var(--swipe-right); left: 18px; transform: rotate(-14deg); }
 
+        /* === CONTROLS === */
         .swipe-buttons {
             display: flex;
-            gap: 40px;
-            margin-top: 10px;
+            align-items: center;
+            gap: 24px;
+            margin-top: 4px;
+            margin-bottom: 12px;
         }
         .swipe-btn {
-            width: 70px; height: 70px;
+            width: 66px;
+            height: 66px;
             border-radius: 50%;
-            font-size: 2em;
+            font-size: 1.75rem;
             border: 3px solid;
             cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.3);
-            transition: transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            transition: transform 0.15s, background 0.15s;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
         }
-        .swipe-btn:active { transform: scale(0.9); }
+        .swipe-btn:hover { transform: scale(1.06); }
+        .swipe-btn:active { transform: scale(0.92); }
         .btn-nope { border-color: var(--swipe-left); color: var(--swipe-left); }
+        .btn-info {
+            width: 52px;
+            height: 52px;
+            font-size: 1.25rem;
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
         .btn-like { border-color: var(--swipe-right); color: var(--swipe-right); }
 
-        /* === RECIPE SCREEN (after match) === */
+        /* === PANELS (FAVORITEN & KATALOG / KOCHBUCH) === */
+        .drawer-panel {
+            display: none;
+            width: 100%;
+            background: var(--panel-bg);
+            border: 1.5px solid rgba(255, 209, 59, 0.45);
+            border-radius: 18px;
+            padding: 16px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+            text-align: left;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+        }
+        .drawer-panel.open { display: block; }
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+        .drawer-header h3 {
+            color: var(--accent-gold);
+            font-size: 1.1rem;
+        }
+        .close-drawer {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .text-input {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .text-input::placeholder { color: rgba(255,255,255,0.55); }
+        .action-btn {
+            padding: 9px 14px;
+            background: var(--accent-gold);
+            color: #230638;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .action-btn.secondary {
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        .catalog-list {
+            list-style: none;
+            max-height: 290px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .catalog-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            background: rgba(255,255,255,0.06);
+            transition: background 0.15s;
+        }
+        .catalog-list li:hover {
+            background: rgba(255,255,255,0.12);
+        }
+        .catalog-item-main {
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            flex: 1;
+        }
+        .catalog-item-title {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #fff;
+        }
+        .catalog-item-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05rem;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.15); }
+
+        /* === NEW RECIPE FORM === */
+        .custom-form {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(255,255,255,0.06);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .custom-form.open { display: flex; }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .select-input, .textarea-input {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(26, 7, 43, 0.9);
+            color: #fff;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+        .textarea-input {
+            width: 100%;
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        /* === RECIPE VIEW === */
         #recipe-screen {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 500px;
-            padding: 15px 15px 100px 15px;
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-gold);
+            border-radius: 22px;
+            padding: 20px 18px 26px 18px;
+            margin-top: 6px;
+            margin-bottom: 24px;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+        }
+        .recipe-hero-emoji {
+            font-size: 3.2rem;
+            margin-bottom: 4px;
         }
         #recipe-screen h2 {
             color: var(--accent-gold);
-            font-size: 2em;
-            margin-bottom: 5px;
-            text-shadow: 0 0 15px var(--accent-gold);
+            font-size: clamp(1.5rem, 4.5vw, 2rem);
+            margin-bottom: 6px;
+        }
+        .recipe-meta-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .kid-tip-box {
+            width: 100%;
+            background: rgba(255, 209, 59, 0.12);
+            border: 1px solid rgba(255, 209, 59, 0.45);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.86rem;
+            color: #fff1b8;
+            text-align: left;
+            margin-bottom: 14px;
+        }
+        .portions-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.07);
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        .portions-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .portion-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1.5px solid var(--accent-gold);
+            background: rgba(0,0,0,0.3);
+            color: var(--accent-gold);
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
         }
         #recipe-screen h3 {
             color: var(--accent-pink);
-            font-size: 1.3em;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            font-size: 1.15rem;
+            margin-top: 14px;
+            margin-bottom: 8px;
             text-align: left;
             width: 100%;
         }
@@ -149,11 +549,20 @@
             padding: 0;
         }
         .ingredient-list li {
-            padding: 6px 12px;
-            margin: 3px 0;
+            padding: 7px 12px;
+            margin: 4px 0;
             background: rgba(255,255,255,0.08);
-            border-radius: 8px;
+            border-radius: 9px;
             border-left: 3px solid var(--accent-gold);
+            font-size: 0.93rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .ingredient-list li.checked {
+            opacity: 0.5;
+            text-decoration: line-through;
         }
         .instruction-list {
             list-style: none;
@@ -163,70 +572,56 @@
             counter-reset: step;
         }
         .instruction-list li {
-            padding: 10px 12px 10px 45px;
-            margin: 5px 0;
+            padding: 10px 12px 10px 44px;
+            margin: 6px 0;
             background: rgba(255,255,255,0.08);
-            border-radius: 8px;
+            border-radius: 10px;
             position: relative;
-            line-height: 1.4;
+            line-height: 1.45;
+            font-size: 0.93rem;
         }
         .instruction-list li::before {
             counter-increment: step;
             content: counter(step);
             position: absolute;
-            left: 8px;
-            top: 8px;
-            width: 26px; height: 26px;
+            left: 10px;
+            top: 10px;
+            width: 25px;
+            height: 25px;
             background: var(--accent-pink);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.82rem;
+            color: #fff;
+        }
+        .recipe-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            width: 100%;
         }
         .back-btn {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: linear-gradient(45deg, var(--accent-pink), #ff3385);
+            padding: 11px 22px;
+            background: linear-gradient(45deg, var(--accent-pink), #ff2e85);
             color: #fff;
             border: 2px solid var(--accent-gold);
-            border-radius: 30px;
-            font-size: 1.2em;
-            font-weight: bold;
+            border-radius: 999px;
+            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
             transition: transform 0.15s;
         }
-        .back-btn:active { transform: scale(0.95); }
+        .back-btn.secondary {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.35);
+        }
+        .back-btn:active { transform: scale(0.96); }
 
-        /* === SETTINGS === */
-        .settings-toggle {
-            display: inline-block;
-            color: var(--accent-gold);
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.85em;
-            margin-bottom: 5px;
-            align-self: flex-end;
-        }
-        #settings-panel {
-            display: none;
-            background: rgba(0,0,0,0.9);
-            border: 1px solid var(--accent-pink);
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 10px;
-            width: 90%;
-            max-width: 400px;
-            text-align: left;
-        }
-        #settings-panel input {
-            width: calc(100% - 80px);
-            padding: 8px;
-            border-radius: 8px;
-            border: none;
-        }
-        .add-btn { width: 70px; padding: 8px; background: var(--accent-gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .del-btn { background: none; border: none; cursor: pointer; font-size: 1.2em; }
-        #list-container { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-top: 10px; }
-        #list-container li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.2); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--accent-pink); border-radius: 10px; }
@@ -235,95 +630,914 @@
 <body>
     <div class="stars"></div>
 
-    <!-- TINDER MODE -->
-    <div id="tinder-screen">
-        <span class="settings-toggle" onclick="toggleSettings()">⚙️ Kochbuch</span>
-        <h1>👑 Menü-Tinder</h1>
-        <p class="subtitle">Wische fürs nächste Gericht • Tippe für Zutaten & Rezept</p>
-        <div class="tinder-container" id="tinder-container"></div>
-        <div class="swipe-buttons">
-            <div class="swipe-btn btn-nope" onclick="swipeLeft()">👈</div>
-            <div class="swipe-btn btn-like" onclick="swipeRight()">❤️</div>
+    <div class="app-shell">
+        <!-- TOP NAVIGATION -->
+        <div class="top-bar">
+            <button class="pill-btn" id="btn-favorites" onclick="toggleDrawer('favorites')">
+                ⭐ Merkliste <span class="counter-badge" id="fav-count">0</span>
+            </button>
+            <button class="pill-btn" id="btn-catalog" onclick="toggleDrawer('catalog')">
+                📖 Alle Gerichte <span class="counter-badge" id="total-count">0</span>
+            </button>
         </div>
-        <div id="settings-panel">
-            <input type="text" id="newMealInput" placeholder="Neues Gericht...">
-            <button class="add-btn" onclick="addMeal()">Hinzufügen</button>
-            <ul id="list-container"></ul>
-        </div>
-    </div>
 
-    <!-- RECIPE MODE (nach Match) -->
-    <div id="recipe-screen">
-        <h2 id="recipe-name"></h2>
-        <div id="recipe-ingredients-section">
-            <h3>🛒 Zutaten</h3>
-            <ul class="ingredient-list" id="recipe-ingredients"></ul>
+        <h1>🍽️ Schlemmer-Swipe</h1>
+        <p class="subtitle">Kindgerechte Familienküche • Rechts wischen = Lecker! • Tippen = Rezept</p>
+
+        <!-- CATEGORY & TIME FILTERS -->
+        <div class="filter-bar" id="filter-bar">
+            <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">✨ Alle</button>
+            <button class="filter-chip" data-filter="schnell" onclick="setFilter('schnell')">⚡ Schnell (≤25 Min)</button>
+            <button class="filter-chip" data-filter="pasta" onclick="setFilter('pasta')">🍝 Pasta &amp; Klöße</button>
+            <button class="filter-chip" data-filter="kartoffel" onclick="setFilter('kartoffel')">🥔 Kartoffel-Hits</button>
+            <button class="filter-chip" data-filter="ofen" onclick="setFilter('ofen')">🧀 Ofen &amp; Pfanne</button>
+            <button class="filter-chip" data-filter="suppe" onclick="setFilter('suppe')">🥣 Suppen &amp; Eintöpfe</button>
+            <button class="filter-chip" data-filter="suess" onclick="setFilter('suess')">🥞 Süße Hauptgerichte</button>
+            <button class="filter-chip" data-filter="veggie" onclick="setFilter('veggie')">🌱 Vegetarisch</button>
         </div>
-        <div id="recipe-instructions-section">
-            <h3>👨‍🍳 Zubereitung</h3>
-            <ol class="instruction-list" id="recipe-instructions"></ol>
+
+        <!-- FAVORITES DRAWER -->
+        <div class="drawer-panel" id="favorites-drawer">
+            <div class="drawer-header">
+                <h3>⭐ Eure Familien-Merkliste</h3>
+                <button class="close-drawer" onclick="toggleDrawer('favorites')" aria-label="Schließen">✕</button>
+            </div>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">
+                Alle Gerichte, die ihr nach rechts gewischt oder gemerkt habt:
+            </p>
+            <ul class="catalog-list" id="favorites-list"></ul>
+            <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                <button class="action-btn secondary" onclick="clearFavorites()">Merkliste leeren</button>
+                <button class="action-btn" onclick="pickRandomFavorite()">🎲 Zufalls-Favorit</button>
+            </div>
         </div>
-        <button class="back-btn" onclick="backToSwipe()">🔄 Weiter wischen!</button>
+
+        <!-- CATALOG & CUSTOM MEAL DRAWER -->
+        <div class="drawer-panel" id="catalog-drawer">
+            <div class="drawer-header">
+                <h3>📖 Familien-Kochbuch durchsuchen</h3>
+                <button class="close-drawer" onclick="toggleDrawer('catalog')" aria-label="Schließen">✕</button>
+            </div>
+            <div class="search-row">
+                <input type="text" class="text-input" id="search-input" placeholder="Gericht oder Zutat suchen (z.B. Lachs, Pfannkuchen)..." oninput="renderCatalog()">
+                <button class="action-btn" onclick="toggleCustomForm()">+ Eigenes</button>
+            </div>
+
+            <!-- Custom Recipe Form -->
+            <div class="custom-form" id="custom-form">
+                <strong style="color:var(--accent-gold); font-size:0.9rem;">Neues Familiengericht anlegen</strong>
+                <input type="text" class="text-input" id="custom-name" placeholder="Name des Gerichts (z.B. Omas Kartoffelsuppe)">
+                <div class="form-row">
+                    <select class="select-input" id="custom-cat">
+                        <option value="pasta">🍝 Pasta &amp; Klöße</option>
+                        <option value="kartoffel">🥔 Kartoffel-Hits</option>
+                        <option value="ofen">🧀 Ofen &amp; Pfanne</option>
+                        <option value="suppe">🥣 Suppen &amp; Eintöpfe</option>
+                        <option value="suess">🥞 Süße Hauptgerichte</option>
+                    </select>
+                    <input type="number" class="select-input" id="custom-time" placeholder="Minuten (z.B. 25)" value="25" min="5" max="180" style="width:110px;">
+                    <label style="display:flex; align-items:center; gap:5px; font-size:0.82rem;">
+                        <input type="checkbox" id="custom-veggie"> 🌱 Vegetarisch
+                    </label>
+                </div>
+                <textarea class="textarea-input" id="custom-ingr" placeholder="Zutaten (eine pro Zeile, für 4 Portionen)"></textarea>
+                <textarea class="textarea-input" id="custom-steps" placeholder="Zubereitungsschritte (einer pro Zeile)"></textarea>
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button class="action-btn secondary" onclick="toggleCustomForm()">Abbrechen</button>
+                    <button class="action-btn" onclick="saveCustomMeal()">Speichern</button>
+                </div>
+            </div>
+
+            <ul class="catalog-list" id="catalog-list"></ul>
+        </div>
+
+        <!-- SWIPE MODE -->
+        <div id="swipe-screen">
+            <div class="deck-status" id="deck-status">65 Familiengerichte im Stapel</div>
+            <div class="card-stage" id="card-stage"></div>
+            <div class="swipe-buttons">
+                <button class="swipe-btn btn-nope" onclick="swipeLeft()" title="Lieber etwas anderes" aria-label="Weiterwischen">👈</button>
+                <button class="swipe-btn btn-info" onclick="openCurrentRecipe()" title="Rezept anschauen" aria-label="Rezept öffnen">📖</button>
+                <button class="swipe-btn btn-like" onclick="swipeRight()" title="Lecker! Auf die Merkliste &amp; zum Rezept" aria-label="Gefällt mir">❤️</button>
+            </div>
+        </div>
+
+        <!-- RECIPE DETAILS MODE -->
+        <div id="recipe-screen">
+            <div class="recipe-hero-emoji" id="recipe-emoji">🍽️</div>
+            <h2 id="recipe-name"></h2>
+            <div class="recipe-meta-bar" id="recipe-meta-bar"></div>
+            <div class="kid-tip-box" id="recipe-kid-tip"></div>
+
+            <div class="portions-bar">
+                <span style="font-weight:700; font-size:0.9rem;">👨‍👩‍👧‍👦 Portionen: <strong id="portion-display" style="color:var(--accent-gold);">4</strong></span>
+                <div class="portions-controls">
+                    <button class="portion-btn" onclick="changePortions(-1)" aria-label="Portion weniger">−</button>
+                    <button class="portion-btn" onclick="changePortions(1)" aria-label="Portion mehr">+</button>
+                </div>
+            </div>
+
+            <div id="recipe-ingredients-section" style="width:100%;">
+                <h3>🛒 Zutaten <small style="font-weight:400; font-size:0.78rem; color:var(--text-muted);">(zum Abhaken antippen)</small></h3>
+                <ul class="ingredient-list" id="recipe-ingredients"></ul>
+            </div>
+
+            <div id="recipe-instructions-section" style="width:100%;">
+                <h3>👨‍🍳 Kinderleichte Zubereitung</h3>
+                <ol class="instruction-list" id="recipe-instructions"></ol>
+            </div>
+
+            <div class="recipe-actions">
+                <button class="back-btn secondary" id="fav-toggle-btn" onclick="toggleFavoriteCurrent()">⭐ Merken</button>
+                <button class="back-btn" onclick="backToSwipe()">🔄 Weiter wischen!</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // === REZEPTDATEN (aus Mealie-DB) ===
-        const recipes = {"Bohnensuppe mit Eierkuchen":{"ingredients":["250 g weiße Bohnen (getrocknet)","1 Bund Suppengrün","2 Kartoffeln","1 Zwiebel","1 EL Öl","1,5 l Gemüsebrühe","Salz, Pfeffer","2 Eier (für Eierkuchen)"],"instructions":["Bohnen über Nacht einweichen. Suppengrün und Kartoffeln würfeln.","Zwiebel in Öl andünsten, Bohnen und Brühe zugeben. 45 Min. köcheln.","Gemüse zugeben, weitere 20 Min. kochen. Mit Salz und Pfeffer abschmecken.","Aus Eiern und Milch dünne Eierkuchen backen, in Streifen schneiden und in die Suppe geben."]},"Bratwurst mit Sauerkraut":{"ingredients":["8 Bratwürste","1 Glas Sauerkraut","1 Zwiebel","1 EL Öl","1 TL Kümmel","1 Lorbeerblatt","Salz, Pfeffer","Senf"],"instructions":["Zwiebel würfeln, in Öl andünsten. Sauerkraut, Kümmel, Lorbeerblatt zugeben. 20 Min. schmoren.","Bratwürste in separater Pfanne rundum goldbraun braten.","Mit Senf servieren. Dazu Salzkartoffeln oder Brot."]},"Dino Nuggets mit Püree":{"ingredients":["1 Pck. Dino Nuggets (TK)","1 kg Kartoffeln","200 ml Milch","50 g Butter","Salz","Muskatnuss"],"instructions":["Kartoffeln schälen, würfeln, in Salzwasser 20 Min. kochen.","Dino Nuggets nach Packungsanweisung im Ofen backen.","Kartoffeln stampfen, mit heißer Milch und Butter cremig rühren. Salz + Muskat zugeben.","Nuggets mit Püree servieren."]},"Fischstäbchen mit Püree":{"ingredients":["12 Fischstäbchen (TK)","1 kg Kartoffeln","200 ml Milch","50 g Butter","Salz","Muskatnuss"],"instructions":["Kartoffeln schälen, würfeln, in Salzwasser 20 Min. kochen.","Fischstäbchen nach Packungsanweisung im Ofen backen.","Kartoffeln stampfen, mit heißer Milch und Butter cremig rühren. Salz + Muskat zugeben.","Fischstäbchen mit Püree servieren."]},"Frikassee mit Reis":{"ingredients":["500 g Hähnchenbrust","2 Karotten","1 Stange Lauch","200 g Champignons","50 g Butter","50 g Mehl","500 ml Hühnerbrühe","200 ml Sahne","1 Eigelb","Salz, Pfeffer","Zitronensaft"],"instructions":["Hähnchen in Würfel schneiden, in Butter anbraten. Herausnehmen.","Karotten, Lauch, Champignons im selben Topf andünsten. Mehl einrühren.","Mit Brühe ablöschen, aufkochen. Sahne zugeben, Hähnchen zurück. 15 Min. köcheln.","Eigelb mit etwas Sauce verrühren, einrühren. Mit Zitronensaft, Salz, Pfeffer abschmecken. Mit Reis servieren."]},"Gebratener Reis mit Hühnchen":{"ingredients":["300 g Basmatireis","400 g Hähnchenbrust","2 Eier","1 rote Paprika","150 g Erbsen (TK)","Sojasauce","Sesamöl","Salz, Pfeffer"],"instructions":["Reis kochen, am besten vom Vortag. Hähnchen würfeln, scharf anbraten.","Eier verquirlen, in Pfanne stocken lassen, zerkleinern.","Alles in Pfanne: Reis, Hähnchen, Paprika, Erbsen. Mit Sojasauce und Sesamöl würzen.","Heiß servieren."]},"Gefüllte Paprika":{"ingredients":["6 Paprikaschoten","500 g Hackfleisch (gemischt)","1 Zwiebel","1 Ei","100 g Reis (gekocht)","Salz, Pfeffer","Paprikapulver","500 ml Tomatenpassata"],"instructions":["Deckel der Paprika abschneiden, Kerne entfernen.","Hack mit gewürfelter Zwiebel, Ei, Reis mischen. Kräftig würzen.","Paprika füllen, in Auflaufform setzen. Passata drumherum gießen.","Bei 180°C ca. 40 Min. backen."]},"Gemüsesuppe":{"ingredients":["3 Karotten","2 Kartoffeln","1 Stange Lauch","1 Stück Sellerie","150 g Erbsen (TK)","1 Zwiebel","1 EL Öl","1,5 l Gemüsebrühe","Salz, Pfeffer","Muskatnuss"],"instructions":["Alles Gemüse würfeln. Zwiebel in Öl andünsten.","Restliches Gemüse zugeben, kurz anschwitzen. Brühe aufgießen.","20 Min. köcheln. Mit Salz, Pfeffer, Muskat abschmecken."]},"Gespenstersuppe":{"ingredients":["500 g weiße Bohnen (Dose)","1 Zwiebel","2 Knoblauchzehen","1 EL Olivenöl","750 ml Gemüsebrühe","200 ml Sahne","Salz, Pfeffer","Muskatnuss","Schnittlauch"],"instructions":["Zwiebel und Knoblauch in Öl andünsten.","Bohnen abgießen, zugeben. Brühe aufgießen, 15 Min. köcheln.","Pürieren, Sahne zugeben. Würzen.","Mit Schnittlauch servieren. Gruselig lecker!"]},"Grießbrei":{"ingredients":["1 l Milch","100 g Weichweizengrieß","4 EL Zucker","1 Pck. Vanillezucker","1 Prise Salz","Zimt & Zucker (zum Bestreuen)"],"instructions":["Milch mit Zucker, Vanillezucker und Salz aufkochen.","Grieß einrieseln lassen, unter Rühren 3 Min. köcheln.","In Schälchen füllen, erkalten lassen.","Mit Zimt & Zucker bestreuen."]},"Hefeklöße":{"ingredients":["500 g Mehl","1 Würfel Hefe","250 ml Milch","50 g Zucker","50 g Butter","1 Ei","1 Prise Salz","Vanillesauce"],"instructions":["Hefe in lauwarmer Milch auflösen. Mit Mehl, Zucker, Ei, Butter, Salz verkneten.","30 Min. gehen lassen. Klöße formen.","In leicht siedendem Wasser 15 Min. ziehen lassen.","Mit Vanillesauce servieren."]},"Hähnchenschenkel":{"ingredients":["8 Hähnchenschenkel","4 EL Öl","2 TL Paprikapulver","1 TL Knoblauchpulver","Salz, Pfeffer","Rosmarin"],"instructions":["Öl mit Gewürzen mischen, Schenkel einreiben.","Auf Backblech legen, bei 200°C ca. 40 Min. backen.","Nach der Hälfte wenden.","Mit Beilage servieren."]},"Kassler mit Kartoffelklößen, Sauerkraut":{"ingredients":["4 Scheiben Kassler (à 200 g)","1 Glas Sauerkraut (500 g)","1 Zwiebel","2 EL Butterschmalz","1 Apfel","1 TL Kümmel","200 ml Apfelsaft","Salz, Pfeffer","1 Pck. Kloßteig (Kühlregal)"],"instructions":["Zwiebel würfeln, Apfel raspeln. In Butterschmalz andünsten.","Sauerkraut, Kümmel und Apfelsaft zugeben. 20 Min. schmoren.","Kassler in Pfanne je Seite 3 Min. braten.","Klöße nach Packungsanweisung zubereiten. Alles zusammen servieren."]},"Lachs mit Reis":{"ingredients":["4 Lachsfilets","250 g Basmatireis","2 EL Zitronensaft","Dill","Salz, Pfeffer","Butter"],"instructions":["Reis kochen. Lachs mit Zitronensaft beträufeln, salzen, pfeffern.","Lachs in Butter je Seite 3 Min. braten.","Mit Dill bestreuen, mit Reis servieren."]},"Linsensuppe":{"ingredients":["250 g Linsen (braun)","2 Karotten","2 Kartoffeln","1 Stange Lauch","1 Zwiebel","100 g Speckwürfel","1 EL Öl","1,5 l Gemüsebrühe","2 Lorbeerblätter","Salz, Pfeffer","Essig"],"instructions":["Linsen waschen. Zwiebel, Speck in Öl andünsten.","Karotten, Kartoffeln, Lauch würfeln, zugeben.","Brühe, Linsen, Lorbeer zugeben. 30 Min. köcheln.","Mit Salz, Pfeffer, einem Schuss Essig abschmecken."]},"Nudelauflauf":{"ingredients":["500 g Nudeln (z.B. Fusilli)","400 g Hackfleisch","1 Zwiebel","1 Dose Tomaten (400 g)","200 g Schmand","200 g Käse (Gouda)","Salz, Pfeffer","Ital. Kräuter"],"instructions":["Nudeln al dente kochen. Hack mit Zwiebel anbraten, Tomaten zugeben, würzen.","Nudeln + Sauce in Auflaufform mischen. Schmand in Klecksen drauf.","Käse reiben, darüber streuen. Bei 180°C 25 Min. backen."]},"Nudeln mit Gulasch":{"ingredients":["500 g Nudeln","600 g Rindergulasch","2 Zwiebeln","2 Paprika","2 EL Tomatenmark","500 ml Rinderbrühe","2 EL Öl","Paprikapulver","Salz, Pfeffer"],"instructions":["Fleisch in Öl scharf anbraten. Zwiebeln würfeln, zugeben.","Tomatenmark und Paprikapulver einrühren. Brühe aufgießen.","1,5 Std. schmoren. Paprika in Streifen zugeben, weitere 15 Min.","Nudeln kochen, mit Gulasch servieren."]},"Nudeln mit Lachs":{"ingredients":["400 g Nudeln (Tagliatelle)","300 g Lachsfilet","200 ml Sahne","1 Zwiebel","2 EL Butter","Dill","Salz, Pfeffer","Zitronensaft"],"instructions":["Nudeln kochen. Zwiebel in Butter andünsten.","Lachs würfeln, kurz mitbraten.","Sahne zugeben, aufkochen. Dill, Salz, Pfeffer, Zitronensaft zugeben.","Nudeln untermischen, servieren."]},"Pellkartoffeln mit Quark":{"ingredients":["1 kg kleine Kartoffeln (festkochend)","500 g Magerquark","200 ml Milch","1 Bund Schnittlauch","1 Zwiebel","Salz, Pfeffer","Leinöl (optional)"],"instructions":["Kartoffeln waschen, mit Schale in Salzwasser 20 Min. kochen.","Quark mit Milch cremig rühren. Schnittlauch in Röllchen, Zwiebel fein würfeln. Unterheben.","Mit Salz und Pfeffer abschmecken. Kartoffeln pellen, in Quark dippen."]},"Pizza":{"ingredients":["1 Pck. Pizzateig (oder selbstgemacht)","200 ml Tomatenpassata","200 g Mozzarella","Belag nach Wahl (Salami, Schinken, Pilze etc.)","Oregano","Olivenöl"],"instructions":["Teig ausrollen, auf Backblech legen. Passata drauf.","Mozzarella zupfen, verteilen. Belag nach Wahl drauf.","Mit Oregano und Olivenöl toppen. Bei 220°C 12-15 Min. backen."]},"Polofinos":{"ingredients":["500 g Hähnchenbrust","1 Zwiebel","2 Knoblauchzehen","1 rote Paprika","200 g Crème fraîche","200 ml Sahne","2 EL Tomatenmark","Salz, Pfeffer","Paprikapulver","Reis als Beilage"],"instructions":["Hähnchen in Streifen schneiden, scharf anbraten. Herausnehmen.","Zwiebel, Knoblauch, Paprika würfeln, andünsten. Tomatenmark einrühren.","Mit Sahne und Crème fraîche ablöschen, würzen. Hähnchen zurückgeben.","10 Min. köcheln. Mit Reis servieren."]},"Ramennudeln mit Ei":{"ingredients":["4 Pck. Instant-Ramen","4 Eier","2 Frühlingszwiebeln","2 EL Sojasauce","1 TL Sesamöl"],"instructions":["Ramen nach Packung kochen, aber nur halb so viel Wasser.","Eier einzeln in die kochende Suppe schlagen, 3 Min. ziehen lassen.","Mit Sojasauce, Sesamöl, Frühlingszwiebeln servieren."]},"Rührei mit Spinat":{"ingredients":["6 Eier","200 g Blattspinat (TK)","50 ml Milch","1 Zwiebel","2 EL Butter","Salz, Pfeffer","Muskatnuss"],"instructions":["Zwiebel in Butter andünsten. Spinat zugeben, auftauen lassen.","Eier mit Milch verquirlen, salzen, pfeffern.","Eier zum Spinat geben, stocken lassen. Mit Muskat abschmecken."]},"Schupfnudeln mit Geschnetzeltem":{"ingredients":["500 g Schupfnudeln (Kühlregal)","400 g Schweinefilet","200 g Champignons","1 Zwiebel","200 ml Sahne","2 EL Butter","Salz, Pfeffer","Petersilie"],"instructions":["Schupfnudeln in Butter goldbraun braten. Herausnehmen.","Fleisch in Streifen schneiden, scharf anbraten. Zwiebel, Pilze zugeben.","Sahne angießen, würzen, 5 Min. köcheln.","Schupfnudeln wieder zugeben, mit Petersilie servieren."]},"Spagetti Bolognese":{"ingredients":["500 g Spaghetti","400 g Hackfleisch","1 Zwiebel","2 Knoblauchzehen","1 Dose Tomaten (400 g)","2 EL Tomatenmark","100 ml Rotwein (optional)","Italiensiche Kräuter","Salz, Pfeffer","Parmesan"],"instructions":["Zwiebel und Knoblauch andünsten, Hack anbraten.","Tomatenmark einrühren, Tomaten und Wein zugeben.","30 Min. köcheln lassen. Kräuter, Salz, Pfeffer zugeben.","Spaghetti kochen, mit Sauce und Parmesan servieren."]},"Spagetti mit Tomatensauce":{"ingredients":["500 g Spaghetti","1 Dose Tomaten (400 g)","1 Zwiebel","2 Knoblauchzehen","2 EL Olivenöl","Basilikum","Salz, Pfeffer","Parmesan"],"instructions":["Zwiebel, Knoblauch in Olivenöl andünsten. Tomaten zugeben.","20 Min. köcheln. Basilikum, Salz, Pfeffer zugeben.","Spaghetti kochen, mit Sauce und Parmesan servieren."]},"Spiegelei mit Bratkartoffeln":{"ingredients":["4 Eier","1 kg Kartoffeln (gekocht, vom Vortag)","1 Zwiebel","4 EL Öl","Salz, Pfeffer"],"instructions":["Gekochte Kartoffeln in Scheiben schneiden. In Öl knusprig braten.","Zwiebel würfeln, zugeben, mitbraten. Salzen, pfeffern.","In separater Pfanne Spiegeleier braten. Zusammen servieren."]},"Spätzle-Pfanne":{"ingredients":["500 g Spätzle (Kühlregal)","200 g Speckwürfel","1 Zwiebel","200 g Käse (Emmentaler)","2 EL Butter","Salz, Pfeffer","Schnittlauch"],"instructions":["Spätzle in Butter goldbraun braten.","Speck und Zwiebel separat anbraten, zu den Spätzle geben.","Käse reiben, darüber streuen. Mit Schnittlauch servieren."]},"Taccos":{"ingredients":["8 Taco Shells","400 g Hackfleisch","1 Pck. Taco-Gewürzmischung","1 Dose Kidneybohnen","Salat","Tomaten","Käse","Sauerrahm"],"instructions":["Hack anbraten, mit Gewürzmischung und Bohnen mischen.","Taco Shells im Ofen erwärmen.","Salat und Tomaten schnippeln.","Tacos füllen: Hackmix, Salat, Tomaten, Käse, Sauerrahm."]},"Tortellini":{"ingredients":["500 g Tortellini (Kühlregal)","200 ml Sahne","100 g Parmesan","Salz, Pfeffer","Muskatnuss"],"instructions":["Tortellini nach Packung kochen.","Sahne erhitzen, Parmesan reinschmelzen, würzen.","Sauce über Tortellini geben, servieren."]},"Wikingertopf":{"ingredients":["600 g Rindfleisch (Gulasch)","4 Kartoffeln","3 Karotten","1 Zwiebel","2 EL Tomatenmark","500 ml Rinderbrühe","2 EL Öl","Salz, Pfeffer","Lorbeerblatt"],"instructions":["Fleisch in Öl scharf anbraten. Zwiebel würfeln, zugeben.","Tomatenmark einrühren, Brühe aufgießen. 45 Min. schmoren.","Kartoffeln und Karotten würfeln, zugeben. Weitere 30 Min. köcheln.","Mit Salz, Pfeffer, Lorbeer abschmecken."]},"Wraps":{"ingredients":["8 Tortilla-Wraps","400 g Hähnchenbrust","Salat","Tomaten","Gurke","200 g Joghurt","1 Knoblauchzehe","Salz, Pfeffer"],"instructions":["Hähnchen in Streifen braten. Salat, Tomaten, Gurke schneiden.","Joghurt mit Knoblauch, Salz, Pfeffer mischen.","Wraps erwärmen, mit allen Zutaten füllen, einrollen."]}};
+        // === KINDGERECHTE FAMILIENGERICHTE (66 Rezepte, Basis: 4 Portionen) ===
+        const defaultRecipes = {
+            // --- PASTA & KLÖSSE ---
+            "Spaghetti Bolognese (Familien-Klassiker)": {
+                emoji: "🍝", category: "pasta", categoryLabel: "Pasta & Klöße", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Mild-fruchtige Hackfleischsauce mit versteckten feinen Möhren.",
+                kidTip: "Karotte fein mitraspeln – macht die Sauce natürlich süß und saftig!",
+                ingredients: ["500 g Spaghetti", "400 g Rinderhackfleisch (oder gemischt)", "1 große Karotte (fein geraspelt)", "1 Zwiebel", "1 Knoblauchzehe", "500 ml passierte Tomaten", "2 EL Tomatenmark", "1 TL Oregano & Basilikum", "80 g geriebener Parmesan oder Gouda", "Salz & milder Pfeffer"],
+                instructions: ["Zwiebel fein würfeln, Karotte fein raspeln und in einem Topf mit etwas Öl weich dünsten.", "Hackfleisch dazugeben und krümelig anbraten. Tomatenmark kurz mitrösten.", "Mit passierten Tomaten und 100 ml Wasser ablöschen, Kräuter zugeben und 20 Min. sanft köcheln.", "Spaghetti in Salzwasser bissfest kochen und mit Sauce und Käse servieren."]
+            },
+            "Spaghetti mit milder Sonnenschein-Tomatensauce": {
+                emoji: "🍅", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Samtige Tomatensauce ohne Stückchen – genau wie Kinder sie lieben.",
+                kidTip: "Ein Stich Butter am Ende nimmt den Tomaten jede Säure.",
+                ingredients: ["500 g Spaghetti", "500 ml passierte Tomaten", "1 kleine Zwiebel", "2 EL Butter", "1 TL Zucker oder Honig", "Frisches Basilikum", "80 g Reibekäse", "Salz"],
+                instructions: ["Zwiebel in Butter glasig dünsten (oder im Ganzen mitkochen und später herausnehmen).", "Passierte Tomaten, eine Prise Salz und 1 TL Zucker zugeben. 15 Min. leise köcheln.", "Am Ende einen Stich kalte Butter und gezupftes Basilikum einrühren.", "Spaghetti al dente kochen und mit der glatten Sauce mischen."]
+            },
+            "Bunte Regenbogen-Käse-Makkaroni (Mac & Cheese)": {
+                emoji: "🧀", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Cremige Hörnchennudeln in milder Käsesauce – ganz ohne Tüte.",
+                kidTip: "Milder junger Gouda und etwas Cheddar geben die schönste Farbe.",
+                ingredients: ["400 g Hörnchennudeln oder Makkaroni", "30 g Butter", "1,5 EL Mehl", "350 ml Milch", "200 g milder Käse (Gouda & Cheddar gerieben)", "150 g TK-Erbsen oder Mais (optional)", "1 Prise Muskatnuss & Salz"],
+                instructions: ["Nudeln in Salzwasser kochen (Erbsen in den letzten 3 Minuten einfach mit ins Nudelwasser geben).", "Butter schmelzen, Mehl einrühren und unter Rühren Milch zugießen. 3 Min. leicht köcheln.", "Topf vom Herd ziehen, Käse darin schmelzen lassen, mild mit Salz und Muskat abschmecken.", "Nudeln abgießen und direkt mit der cremigen Käsesauce vermengen."]
+            },
+            "Tortellini in milder Schinken-Sahne-Sauce": {
+                emoji: "🥟", category: "pasta", categoryLabel: "Pasta & Klöße", time: 15, kidsStars: 5, veggie: false,
+                teaser: "Blitzschnelles 15-Minuten-Mittagessen für hungrige Schultage.",
+                kidTip: "Eine Handvoll TK-Erbsen bringt Farbe und Vitamine in die Sauce.",
+                ingredients: ["750 g frische Tortellini (Kühlregal, z.B. Käse oder Ricotta)", "150 g gekochter Schinken (gewürfelt)", "250 ml Kochsahne", "150 g TK-Erbsen", "60 g geriebener Parmesan", "1 EL Butter", "Salz & Muskatnuss"],
+                instructions: ["Tortellini nach Packungsangabe in nur 3–4 Minuten gar ziehen lassen.", "Schinkenwürfel in Butter kurz anbraten, Sahne und Erbsen zugeben und 4 Min. köcheln.", "Parmesan in die Sauce rühren, mild abschmecken und Tortellini unterheben."]
+            },
+            "Tortellini-Auflauf mit Mozzarella-Kruste": {
+                emoji: "🍲", category: "pasta", categoryLabel: "Pasta & Klöße", time: 25, kidsStars: 5, veggie: true,
+                teaser: "In cremiger Tomaten-Sahne-Sauce gebacken mit Fäden ziehendem Käse.",
+                kidTip: "Geht komplett ohne Vorkochen der Tortellini aus dem Kühlregal!",
+                ingredients: ["750 g Tortellini (Kühlregal)", "400 ml passierte Tomaten", "200 ml Sahne", "150 g Mozzarella oder Gouda", "1 TL italienische Kräuter", "Salz & eine Prise Zucker"],
+                instructions: ["Ofen auf 200 °C vorheizen. Tortellini direkt in eine Auflaufform geben.", "Passierte Tomaten mit Sahne, Kräutern, Salz und einer Prise Zucker verrühren und darüber gießen.", "Mit Käse bestreuen und ca. 20 Minuten goldgelb überbacken."]
+            },
+            "Schupfnudeln mit mildem Rahm-Geschnetzeltem": {
+                emoji: "🥘", category: "pasta", categoryLabel: "Pasta & Klöße", time: 25, kidsStars: 4, veggie: false,
+                teaser: "Goldbraun gebratene Schupfnudeln mit zartem Hähnchen oder Schwein.",
+                kidTip: "Wer keine Pilze mag, nimmt stattdessen kleine Möhrenscheiben und Mais.",
+                ingredients: ["500 g Schupfnudeln (Kühlregal)", "400 g Hähnchen- oder Schweinefilet", "150 g Champignons oder Karotten", "200 ml Kochsahne", "100 ml milde Brühe", "2 EL Butter", "Petersilie & Salz"],
+                instructions: ["Schupfnudeln in Butter goldbraun anbraten und warm stellen.", "Fleisch in kleine Streifen schneiden, in der Pfanne rundherum braten. Gemüse mitdünsten.", "Mit Brühe und Sahne ablöschen, 5 Min. cremig einkochen.", "Schupfnudeln untermischen und mit Petersilie servieren."]
+            },
+            "Cremige Lachs-Sahne-Bandnudeln": {
+                emoji: "🐟", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 4, veggie: false,
+                teaser: "Zarter Lachs ohne Gräten in milder Zitronen-Rahm-Sauce.",
+                kidTip: "TK-Lachsfilet ist zuverlässig grätenfrei und lässt sich leicht würfeln.",
+                ingredients: ["400 g Bandnudeln (Tagliatelle)", "300 g Lachsfilet (ohne Haut & Gräten)", "200 ml Sahne", "100 ml Gemüsebrühe", "1 EL Butter", "Etwas Zitronensaft & milder Dill", "Salz"],
+                instructions: ["Bandnudeln in Salzwasser kochen.", "Lachs in mundgerechte Würfel schneiden und in Butter 2–3 Min. sanft anbraten.", "Sahne und Brühe angießen, 4 Min. ziehen lassen, mit Dill, Salz und einem Spritzer Zitrone abschmecken.", "Mit den Bandnudeln mischen."]
+            },
+            "Kinder-Carbonara (ohne rohes Ei)": {
+                emoji: "🥓", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Sämige Schinken-Käse-Pasta mit Sahne – absolut gelingsicher für Kinder.",
+                kidTip: "Kein rohes Ei nötig: Sahne und Parmesan machen die Sauce herrlich cremig.",
+                ingredients: ["500 g Spaghetti", "150 g milder Kochschinken oder Bacon-Würfel", "250 ml Kochsahne", "80 g frisch geriebener Parmesan", "1 EL Butter", "Petersilie & etwas Muskat"],
+                instructions: ["Spaghetti in Salzwasser kochen.", "Schinkenwürfel in Butter leicht anbraten.", "Sahne angießen, kurz aufkochen und den Parmesan darin schmelzen lassen.", "Nudeln mit etwas Nudelkochwasser unter die Sauce heben."]
+            },
+            "Bunter Nudelauflauf mit Hack & Schmand": {
+                emoji: "🫕", category: "pasta", categoryLabel: "Pasta & Klöße", time: 35, kidsStars: 5, veggie: false,
+                teaser: "Der Familien-Liebling aus dem Ofen mit knuspriger Gouda-Decke.",
+                kidTip: "Schmand-Kleckse unter dem Käse halten die Nudeln super saftig.",
+                ingredients: ["500 g Spirelli-Nudeln", "400 g Hackfleisch", "1 Dose gehackte oder passierte Tomaten (400 g)", "200 g Schmand", "200 g geriebener Gouda", "1 Zwiebel", "Salz & milde Kräuter"],
+                instructions: ["Nudeln knapp bissfest kochen. Hackfleisch mit fein gewürfelter Zwiebel anbraten.", "Tomaten unterrühren, mild würzen und mit den Nudeln in einer Auflaufform mischen.", "Schmand in Klecksen darauf verteilen, mit Gouda bestreuen und bei 180 °C 25 Min. backen."]
+            },
+            "Käsespätzle-Pfanne mit Röstzwiebeln": {
+                emoji: "🥨", category: "pasta", categoryLabel: "Pasta & Klöße", time: 15, kidsStars: 5, veggie: true,
+                teaser: "Fluffige Spätzle mit geschmolzenem Käse aus einer einzigen Pfanne.",
+                kidTip: "Röstzwiebeln separat in einem Schälchen auf den Tisch stellen, damit jedes Kind selbst streuen kann.",
+                ingredients: ["600 g Spätzle (Kühlregal)", "200 g geriebener Emmentaler oder Gouda", "100 ml Milch oder Sahne", "2 EL Butter", "Röstzwiebeln (zum Bestreuen)", "Schnittlauch & Salz"],
+                instructions: ["Spätzle in einer großen Pfanne mit Butter goldgelb anbraten.", "Milch/Sahne angießen, Käse darüberstreuen und bei geschlossenem Deckel 3 Min. schmelzen lassen.", "Mit Schnittlauch und optional Röstzwiebeln servieren. Dazu passt Apfelmus oder Gurkensalat!"]
+            },
+            "Nudeln mit zartem Familien-Gulasch": {
+                emoji: "🥩", category: "pasta", categoryLabel: "Pasta & Klöße", time: 60, kidsStars: 4, veggie: false,
+                teaser: "Butterzart geschmortes Rindergulasch in milder Paprika-Rahmsauce.",
+                kidTip: "Ein Klecks Crème fraîche auf dem Teller macht die Sauce besonders mild.",
+                ingredients: ["500 g Spirelli-Nudeln", "500 g Rindergulasch (klein gewürfelt)", "2 rote Paprika", "2 Zwiebeln", "2 EL Tomatenmark", "500 ml milde Brühe", "100 g Crème fraîche", "Edelsüßes Paprikapulver & Salz"],
+                instructions: ["Fleisch in kleine, kindgerechte Würfel schneiden und in Öl anbraten. Zwiebeln mitdünsten.", "Tomatenmark und edelsüßes Paprikapulver einrühren, mit Brühe ablöschen und ca. 50 Min. weich schmoren.", "Paprikawürfel in den letzten 15 Min. mitkochen, Crème fraîche unterrühren.", "Mit frisch gekochten Nudeln servieren."]
+            },
+            "One-Pot Regenbogen-Pasta": {
+                emoji: "🌈", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Nudeln, Mais, Erbsen und Paprika kochen zusammen in einem Topf.",
+                kidTip: "Nur ein Topf zum Abwaschen und durch die Stärke im Nudelwasser von allein cremig!",
+                ingredients: ["400 g kurze Nudeln (Farfalle/Schmetterlingsnudeln)", "1 rote Paprika (klein gewürfelt)", "150 g Dosenmais", "150 g TK-Erbsen", "400 ml passierte Tomaten", "500 ml Gemüsebrühe", "150 g Frischkäse", "80 g Reibekäse"],
+                instructions: ["Ungekochte Nudeln, Paprika, passierte Tomaten und Brühe in einen großen Topf geben.", "Unter gelegentlichem Rühren ca. 10–12 Min. köcheln, bis die Nudeln weich sind.", "Mais und Erbsen in den letzten 3 Min. zugeben. Frischkäse und Reibekäse unterrühren."]
+            },
+            "Knusprige Pfannen-Gnocchi in Tomaten-Mozzarella-Sauce": {
+                emoji: "🍅", category: "pasta", categoryLabel: "Pasta & Klöße", time: 15, kidsStars: 5, veggie: true,
+                teaser: "Außen goldbraun gebratene Kartoffel-Gnocchi mit geschmolzenen Mozzarella-Perlen.",
+                kidTip: "Gnocchi nicht kochen, sondern direkt mit Butter in der Pfanne braten – viel leckerer!",
+                ingredients: ["600 g Gnocchi (Kühlregal)", "2 EL Butter", "400 ml passierte oder stückige Tomaten", "100 ml Sahne", "150 g Mini-Mozzarella-Kugeln", "Basilikum & Salz"],
+                instructions: ["Gnocchi in einer großen Pfanne in Butter 5 Min. rundum goldbraun anbraten.", "Tomaten und Sahne dazugeben, mild salzen und 3 Min. blubbern lassen.", "Mini-Mozzarella darauf verteilen und kurz anschmelzen lassen."]
+            },
+            "Lustige Würstchen-Spaghetti (Tintenfische)": {
+                emoji: "🐙", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Spaghetti werden vor dem Kochen durch kleine Würstchenstücke gesteckt!",
+                kidTip: "Kinder lieben es, beim Durchpieksen der rohen Spaghetti zu helfen.",
+                ingredients: ["400 g Spaghetti", "6 Wiener Würstchen oder Geflügelwürstchen", "500 ml milde Tomatensauce", "80 g geriebener Gouda"],
+                instructions: ["Würstchen in 3 cm lange Stücke schneiden.", "Durch jedes Würstchenstück 5–6 rohe Spaghetti pieksen.", "In einem großen Topf mit Salzwasser ca. 10 Min. kochen – es entstehen kleine Tintenfische!", "Mit warmer Tomatensauce und Reibekäse servieren."]
+            },
+            "Pesto-Schmetterlingsnudeln mit Kirschtomaten & Mozzarella": {
+                emoji: "🦋", category: "pasta", categoryLabel: "Pasta & Klöße", time: 15, kidsStars: 4, veggie: true,
+                teaser: "Schmetterlingsnudeln (Farfalle) mit mildem Basilikum- oder rotem Pesto.",
+                kidTip: "Ein Schuss Sahne im Pesto macht den Geschmack für Kinder viel milder.",
+                ingredients: ["500 g Farfalle (Schmetterlingsnudeln)", "1 Glas mildes Pesto (grün oder rot)", "100 ml Kochsahne", "250 g süße Kirschtomaten (halbiert)", "150 g Mini-Mozzarella"],
+                instructions: ["Schmetterlingsnudeln in Salzwasser al dente kochen.", "Pesto mit einem Schuss warmer Sahne glatt rühren und unter die heißen Nudeln mischen.", "Halbierte Kirschtomaten und kleine Mozzarella-Kugeln unterheben."]
+            },
 
-        // === APP STATE ===
-        const defaultMeals = [
-            "Polofinos", "Taccos", "Gemüsesuppe", "Frikassee mit Reis", 
-            "Kassler mit Kartoffelklößen, Sauerkraut", "Bratwurst mit Sauerkraut", 
-            "Pellkartoffeln mit Quark", "Spätzle-Pfanne", "Dino Nuggets mit Püree", 
-            "Gebratener Reis mit Hühnchen", "Wraps", "Tortellini", 
-            "Ramennudeln mit Ei", "Schupfnudeln mit Geschnetzeltem", 
-            "Pizza", "Gespenstersuppe", "Nudelauflauf", "Gefüllte Paprika", 
-            "Spagetti mit Tomatensauce", "Spagetti Bolognese", 
-            "Nudeln mit Gulasch", "Lachs mit Reis", "Rührei mit Spinat", 
-            "Spiegelei mit Bratkartoffeln", "Grießbrei", "Hähnchenschenkel", 
-            "Hefeklöße", "Nudeln mit Lachs", "Fischstäbchen mit Püree", 
-            "Linsensuppe", "Bohnensuppe mit Eierkuchen", "Wikingertopf"
-        ];
+            // --- KARTOFFEL-HITS ---
+            "Dino-Nuggets mit cremigem Kartoffelpüree": {
+                emoji: "🦖", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Knusprige Hähnchen-Dinos im Kartoffel-Vulkan mit Erbsen-Bäumen.",
+                kidTip: "Aus dem Püree einen kleinen Berg formen und etwas Bratensauce oder Ketchup als 'Lava' hineingeben.",
+                ingredients: ["1 Packung Dino-Nuggets (Hähnchen oder Veggie)", "1 kg mehligkochende Kartoffeln", "200 ml warme Milch", "50 g Butter", "200 g TK-Erbsen oder Rahmspinat", "Salz & 1 Prise Muskatnuss"],
+                instructions: ["Kartoffeln schälen, würfeln und in Salzwasser 20 Min. weich kochen.", "Dino-Nuggets im Backofen auf Backpapier knusprig backen (ganz ohne extra Fett).", "Kartoffeln abgießen, mit Butter und warmer Milch fluffig stampfen, mild abschmecken.", "Mit den Nuggets und gedünsteten Erbsen anrichten."]
+            },
+            "Knusprige Fischstäbchen mit Kartoffelpüree & Rahmspinat": {
+                emoji: "🐠", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Die heilige Dreifaltigkeit der deutschen Familienküche.",
+                kidTip: "Im Ofen gebacken werden Fischstäbchen gleichmäßig knusprig und spritzen nicht.",
+                ingredients: ["12–15 Fischstäbchen (TK)", "1 kg Kartoffeln", "450 g milder Rahmspinat (TK)", "200 ml Milch", "50 g Butter", "Salz & Muskat"],
+                instructions: ["Fischstäbchen bei 200 °C im Ofen ca. 15 Min. goldbraun backen.", "Geschälte Kartoffeln 20 Min. kochen, mit Milch und Butter zu cremigem Püree stampfen.", "Rahmspinat in einem kleinen Topf bei milder Hitze auftauen und erwärmen. Alles zusammen servieren."]
+            },
+            "Pellkartoffeln mit mildem Kräuterquark": {
+                emoji: "🥔", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 4, veggie: true,
+                teaser: "Frische Kartoffeln mit cremigem Schnittlauch-Quark und Butterflöckchen.",
+                kidTip: "Kleine Drillinge mit dünner Schale müssen Kinder gar nicht pellen!",
+                ingredients: ["1 kg kleine Kartoffeln (festkochend)", "500 g Speisequark (20 % oder 40 %)", "150 ml Milch oder Joghurt", "1 Bund Schnittlauch & Petersilie", "Butter oder etwas Leinöl", "Salz"],
+                instructions: ["Kartoffeln gründlich waschen und mit Schale in Salzwasser ca. 20 Min. garen.", "Quark mit Milch oder Joghurt schön glatt und cremig rühren.", "Schnittlauch in feine Röllchen schneiden, unterheben und mild salzen."]
+            },
+            "Spiegelei mit knusprigen Bratkartoffeln & Rahmspinat": {
+                emoji: "🍳", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Goldbraune Bratkartoffeln mit Sonnenschein-Spiegelei.",
+                kidTip: "Für kleinere Kinder das Eigelb von beiden Seiten durchbraten.",
+                ingredients: ["1 kg gekochte Kartoffeln (ideal vom Vortag)", "4–6 Eier", "450 g Rahmspinat (TK)", "3 EL Butter oder Butterschmalz", "Salz & Schnittlauch"],
+                instructions: ["Kartoffeln in Scheiben schneiden und in einer großen Pfanne knusprig goldbraun braten.", "Rahmspinat im Topf erwärmen.", "In einer zweiten Pfanne Spiegeleier braten und auf den Kartoffeln anrichten."]
+            },
+            "Cremiges Rührei mit Rahmspinat & Salzkartoffeln": {
+                emoji: "🥚", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Fluffiges Rührei, milder Blubb-Spinat und weiche Kartoffeln.",
+                kidTip: "Ein Schuss Milch oder Sahne im Ei macht das Rührei besonders weich und saftig.",
+                ingredients: ["6 Eier", "60 ml Milch", "800 g Kartoffeln", "450 g Rahmspinat (TK)", "2 EL Butter", "Salz & eine Prise Muskat"],
+                instructions: ["Kartoffeln schälen, würfeln und in Salzwasser 20 Min. kochen.", "Rahmspinat im Topf langsam erhitzen.", "Eier mit Milch und einer Prise Salz verquirlen und in Butter bei mittlerer Hitze sanft stocken lassen."]
+            },
+            "Knusprige Kartoffelpuffer (Reibekuchen) mit Apfelmus": {
+                emoji: "🥞", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Außen kross, innen weich – mit fruchtigem Apfelmus ein Festessen.",
+                kidTip: "Wer Zeit sparen will, kann die Puffer auf einem geölten Blech im Ofen knusprig backen!",
+                ingredients: ["1 kg Kartoffeln", "1 Ei", "3 EL Mehl oder Haferflocken", "1 großes Glas Apfelmus (ohne Zuckerzusatz)", "Öl zum Ausbacken", "1 TL Salz"],
+                instructions: ["Kartoffeln schälen, grob raspeln und in einem Küchentuch kräftig ausdrücken.", "Mit Ei, Mehl und Salz vermischen.", "In einer Pfanne mit heißem Öl kleine flache Taler von beiden Seiten goldbraun braten.", "Warm mit reichlich Apfelmus servieren."]
+            },
+            "Kartoffel-Gemüse-Gratin mit milder Käsekruste": {
+                emoji: "🧀", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 45, kidsStars: 4, veggie: true,
+                teaser: "Dünne Kartoffelscheiben und süße Möhren in cremiger Sahnesauce.",
+                kidTip: "Vorgekochte Kartoffelscheiben halbieren die Backzeit im Ofen auf 20 Minuten!",
+                ingredients: ["800 g Kartoffeln", "2 Karotten", "200 g Brokkoliröschen", "250 ml Sahne", "150 ml Milch", "180 g geriebener Gouda", "Salz & Muskat"],
+                instructions: ["Kartoffeln und Karotten in dünne Scheiben schneiden und mit dem Brokkoli 8 Min. in Salzwasser vorkochen.", "Abgießen und in eine Auflaufform schichten.", "Sahne und Milch mit Salz und Muskat verrühren, darübergießen, mit Käse bestreuen und bei 200 °C 20 Min. überbacken."]
+            },
+            "Kassler mit Kartoffelklößen & mildem Apfel-Sauerkraut": {
+                emoji: "🥟", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 30, kidsStars: 4, veggie: false,
+                teaser: "Herzhafte Hausmannskost – durch geriebenen Apfel und Apfelsaft ganz mild.",
+                kidTip: "Geraspelter Apfel und Apfelsaft machen das Sauerkraut süßlich-mild für Kinder.",
+                ingredients: ["4 Scheiben mageres Kassler", "1 Packung Kloßteig (Kühlregal)", "500 g mildes Sauerkraut", "1 süßer Apfel (geraspelt)", "150 ml Apfelsaft", "2 EL Butter"],
+                instructions: ["Sauerkraut mit geraspeltem Apfel, Apfelsaft und 1 EL Butter 20 Min. sanft schmoren.", "Aus dem Kloßteig runde Klöße rollen und in siedendem Salzwasser 15 Min. ziehen lassen.", "Kassler in etwas Butter pro Seite 2–3 Min. erwärmen und alles zusammen anrichten."]
+            },
+            "Milde Kinder-Bratwurst mit Sauerkraut & Kartoffelbrei": {
+                emoji: "🌭", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 4, veggie: false,
+                teaser: "Kleine Rostbratwürstchen mit cremigem Püree und mildem Rahm-Kraut.",
+                kidTip: "Kleine Nürnberger Rostbratwürstchen haben genau die richtige Kinder-Größe!",
+                ingredients: ["12 kleine Nürnberger Bratwürstchen (oder 6 große)", "1 kg Kartoffeln", "500 g mildes Sauerkraut", "100 ml Apfelsaft & 2 EL Sahne", "200 ml Milch & 50 g Butter (fürs Püree)", "Milder Kinder-Senf oder Ketchup"],
+                instructions: ["Kartoffeln kochen und mit Milch und Butter zu Püree stampfen.", "Sauerkraut mit Apfelsaft 15 Min. schmoren und am Ende 2 EL Sahne unterrühren.", "Bratwürstchen in der Pfanne rundum goldbraun braten."]
+            },
+            "Bunte Ofenkartoffeln (Kumpir) mit Wunsch-Toppings": {
+                emoji: "🥔", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 45, kidsStars: 5, veggie: true,
+                teaser: "Große Folienkartoffeln zum Selbstbefüllen mit Käse, Mais, Quark und Schinken.",
+                kidTip: "Wie beim Taco-Abend: Jedes Kind stellt sich seine Lieblingskartoffel am Tisch selbst zusammen.",
+                ingredients: ["4 große mehligkochende Kartoffeln", "2 EL Butter", "150 g geriebener Gouda", "300 g Kräuterquark", "1 kleine Dose Mais", "1 kleine Gurke (gewürfelt)", "100 g Schinkenwürfel (optional)"],
+                instructions: ["Kartoffeln gründlich waschen, mit einer Gabel mehrmals einstechen und bei 200 °C ca. 45 Min. weich backen (oder 10 Min. in der Mikrowelle vorgaren + 15 Min. Ofen).", "Kartoffeln längs aufschneiden, das Innere mit einer Gabel auflockern und direkt Butter + Käse hineinrühren.", "Mit Mais, Quark, Gurkenwürfeln und Wunsch-Toppings füllen."]
+            },
+            "Knusprige Kartoffel-Wedges aus dem Ofen mit Sour-Cream": {
+                emoji: "🍟", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 30, kidsStars: 5, veggie: true,
+                teaser: "Selbstgemachte, fettarme Kartoffelspalten aus dem Backofen mit mildem Dip.",
+                kidTip: "1 EL Speisestärke über die Kartoffelspalten macht sie im Ofen extra knusprig!",
+                ingredients: ["1 kg festkochende Kartoffeln", "2 EL Olivenöl", "1 TL edelsüßes Paprikapulver", "1 EL Speisestärke", "200 g Schmand + 150 g Joghurt", "Schnittlauch & Salz"],
+                instructions: ["Kartoffeln waschen, in Spalten schneiden und mit Öl, Paprikapulver, Stärke und etwas Salz mischen.", "Auf einem Backblech verteilen und bei 210 °C ca. 25–30 Min. goldbraun backen.", "Schmand und Joghurt mit Schnittlauch und einer Prise Salz zum Dippen verrühren."]
+            },
+            "Bunte Bauernpfanne mit Kartoffeln, Ei & mildem Gemüse": {
+                emoji: "🥘", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 4, veggie: true,
+                teaser: "Würfelkartoffeln, süße Paprika und Erbsen mit gestocktem Ei.",
+                kidTip: "Mit etwas geriebenem Gouda bestreut schmilzt der Käse direkt in der warmen Pfanne.",
+                ingredients: ["800 g gekochte Kartoffeln (gewürfelt)", "1 rote Paprika", "150 g TK-Erbsen", "4 Eier", "100 g geriebener Gouda", "2 EL Butter", "Salz & Schnittlauch"],
+                instructions: ["Kartoffelwürfel in Butter goldbraun braten. Paprikawürfel und Erbsen 5 Min. mitbraten.", "Eier verquirlen, mild salzen und über die Kartoffeln gießen. Stocken lassen.", "Käse darüberstreuen und kurz schmelzen lassen."]
+            },
+            "Kartoffel-Möhren-Stampf mit milden Mini-Frikadellen": {
+                emoji: "🧆", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Samtiger, leicht süßlicher Möhren-Kartoffel-Stampf mit kleinen Hackbällchen.",
+                kidTip: "Kleine Mini-Bällchen sind für Kinderhände viel schneller gegessen als große Buletten.",
+                ingredients: ["700 g Kartoffeln", "400 g Karotten", "400 g Hackfleisch", "1 Ei & 3 EL Paniermehl", "40 g Butter & 100 ml Milch", "Salz & 1 Prise Muskat"],
+                instructions: ["Kartoffeln und Karotten schälen, würfeln und zusammen 20 Min. in Salzwasser weich kochen.", "Hackfleisch mit Ei, Paniermehl und einer Prise Salz mischen, kleine Bällchen rollen und in der Pfanne rundum 8–10 Min. braten.", "Kartoffeln und Möhren abgießen und mit Butter und Milch cremig stampfen."]
+            },
 
-        let meals;
-        try {
-            const stored = localStorage.getItem('princessMeals');
-            const parsed = stored ? JSON.parse(stored) : null;
-            meals = Array.isArray(parsed) ? parsed : [...defaultMeals];
-        } catch (e) {
-            meals = [...defaultMeals];
-        }
+            // --- OFEN, PFANNE & REIS ---
+            "Polofinos (Zarte Hähnchen-Sahne-Pfanne mit Reis)": {
+                emoji: "🍗", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Saftige Hähnchenstreifen in milder Tomaten-Paprika-Rahmsauce mit Reis.",
+                kidTip: "Unser Familien-Klassiker! Die cremige rosa Sauce lieben alle Kinder.",
+                ingredients: ["500 g Hähnchenbrustfilet", "250 g Basmatireis", "1 rote Paprika", "1 kleine Zwiebel", "150 g Crème fraîche", "200 ml Sahne", "2 EL Tomatenmark", "Edelsüßes Paprikapulver & Salz"],
+                instructions: ["Reis nach Packungsangabe kochen. Hähnchen in Streifen schneiden und in der Pfanne goldbraun anbraten, herausnehmen.", "Fein gewürfelte Zwiebel und Paprika andünsten, Tomatenmark kurz mitrösten.", "Mit Sahne und Crème fraîche ablöschen, mild würzen, Hähnchen zurückgeben und 8 Min. sanft ziehen lassen."]
+            },
+            "Mildes Hühnerfrikassee mit Reis": {
+                emoji: "🍚", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Zartes Hähnchen, Erbsen und Möhren in heller, samtiger Rahmsauce.",
+                kidTip: "Ein kleiner Spritzer Zitrone und süße TK-Erbsen machen das Frikassee perfekt.",
+                ingredients: ["500 g Hähnchenbrust", "250 g Reis", "2 Karotten & 150 g TK-Erbsen", "150 g kleine Champignons (optional)", "40 g Butter & 40 g Mehl", "400 ml milde Hühnerbrühe", "150 ml Sahne", "Salz & 1 Spritzer Zitrone"],
+                instructions: ["Reis kochen. Hähnchen in mundgerechte Würfel schneiden und in etwas Butter anbraten, herausnehmen.", "Karottenscheiben (und Pilze) in 40 g Butter andünsten, Mehl darüberstäuben und mit Brühe + Sahne unter Rühren ablöschen.", "Hähnchen und Erbsen zugeben, 10 Min. sanft köcheln und mild abschmecken."]
+            },
+            "Bunter gebratener Eierreis mit Hühnchen": {
+                emoji: "🍛", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Milder Pfannenreis mit Rührei-Flocken, Erbsen, Möhren und Hähnchen.",
+                kidTip: "Mit milder, salzreduzierter Sojasauce schmeckt es wie beim Lieblings-Asiaten.",
+                ingredients: ["300 g Basmatireis", "350 g Hähnchenbrust", "2 Eier", "1 rote Paprika & 1 Karotte (fein gewürfelt)", "150 g TK-Erbsen", "2 EL milde Sojasauce", "1 TL mildes Sesamöl"],
+                instructions: ["Reis kochen (oder Reis vom Vortag verwenden). Hähnchen klein würfeln und goldbraun braten.", "Eier in der Pfanne als weiches Rührei stocken lassen und klein zerteilen.", "Gemüse kurz anbraten, Reis, Hähnchen und Ei unterheben und mit milder Sojasauce abschmecken."]
+            },
+            "Lachsfilet aus der Pfanne mit Butterreis & Brokkoli": {
+                emoji: "🐟", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 20, kidsStars: 4, veggie: false,
+                teaser: "Saftig gebratener Lachs mit lockerem Reis und zarten Brokkoli-Bäumchen.",
+                kidTip: "Kinder nennen Brokkoliröschen gern 'kleine Dino-Bäume' – in Butter geschwenkt super mild.",
+                ingredients: ["4 Lachsfilets (ohne Gräten)", "250 g Basmatireis", "1 Kopf Brokkoli (in kleinen Röschen)", "2 EL Butter", "Etwas Zitronensaft & Dill", "Salz"],
+                instructions: ["Reis kochen. Brokkoli-Bäumchen 5 Min. in leicht gesalzenem Wasser bissfest dünsten.", "Lachsfilets in Butter bei mittlerer Hitze je Seite 3–4 Min. saftig braten.", "Mit einem Hauch Zitrone, Dill, Butterreis und Brokkoli servieren."]
+            },
+            "Knusprige Hähnchenschenkel vom Blech mit Ofengemüse": {
+                emoji: "🍗", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 45, kidsStars: 5, veggie: false,
+                teaser: "Goldbraune Hähnchenkeulen mit milden Paprika-Kartoffeln von einem Blech.",
+                kidTip: "Der Ofen macht die ganze Arbeit allein – perfekt für entspannte Familienabende.",
+                ingredients: ["4–6 Hähnchenschenkel (oder Unterkeulen)", "800 g kleine Kartoffeln (halbiert)", "3 Karotten & 1 rote Paprika", "3 EL Öl", "2 TL edelsüßes Paprikapulver", "Salz"],
+                instructions: ["Ofen auf 200 °C vorheizen. Öl mit edelsüßem Paprikapulver und Salz mischen.", "Hähnchenschenkel, halbierte Kartoffeln und Möhrenstücke auf einem Backblech damit bestreichen.", "Ca. 40 Min. knusprig backen (Paprikastreifen nach 20 Min. dazulegen)."]
+            },
+            "Gefüllte Regenbogen-Paprika mit Reis & Hackfleisch": {
+                emoji: "🫑", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 45, kidsStars: 4, veggie: false,
+                teaser: "Süße rote, gelbe und orange Paprika gefüllt in milder Tomatensauce.",
+                kidTip: "Rote, gelbe und orange Paprika verwenden – grüne Paprika sind Kindern oft zu bitter.",
+                ingredients: ["4–6 bunte Paprika (rot/gelb/orange)", "400 g Hackfleisch", "150 g gekochter Reis", "1 Ei", "500 ml passierte Tomaten", "100 g geriebener Gouda", "Salz & milde Kräuter"],
+                instructions: ["Deckel der Paprika abschneiden und Kerne entfernen.", "Hackfleisch mit gekochtem Reis, Ei und milden Gewürzen verkneten und in die Paprika füllen.", "In eine Auflaufform stellen, passierte Tomaten angießen, mit etwas Käse bestreuen und bei 180 °C 35–40 Min. schmoren."]
+            },
+            "Familien-Blechpizza zum Selbstbelegen": {
+                emoji: "🍕", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Jedes Familienmitglied belegt seine eigene Ecke auf dem Backblech!",
+                kidTip: "Mit Mais, Mini-Salami, Champignons und Paprika kann man lustige Gesichter auf die Pizza legen.",
+                ingredients: ["1–2 Rollen frischer Pizzateig (oder Hefeteig)", "250 ml milde Tomatenpassata", "250 g geriebener Mozzarella", "1 kleine Dose Mais", "1 rote Paprika, Champignons, gekochter Schinken oder milde Salami", "1 TL Oregano"],
+                instructions: ["Ofen auf 220 °C vorheizen. Teig auf dem Backblech ausrollen.", "Passata mit Oregano und einer Prise Salz verrühren und aufstreichen.", "Jedes Familienmitglied belegt sein Viertel nach Wunsch und streut Mozzarella darüber.", "12–15 Minuten goldbraun backen."]
+            },
+            "Fluffige Mini-Pizza-Brötchen aus dem Ofen": {
+                emoji: "🥖", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Aufgeschnittene Brötchen mit cremiger Käse-Schinken-Paprika-Creme überbacken.",
+                kidTip: "Auch am nächsten Tag kalt in der Brotdose für die Schule ein absoluter Hit!",
+                ingredients: ["6–8 Aufbackbrötchen (halbiert)", "150 g gekochter Schinken (fein gewürfelt)", "1 rote Paprika & 1 kleine Dose Mais", "200 g geriebener Gouda", "150 g Schmand", "100 ml Sahne", "3 EL Tomatenmark & Oregano"],
+                instructions: ["Schinken, fein gewürfelte Paprika, Mais, Käse, Schmand, Sahne, Tomatenmark und Oregano in einer Schüssel vermischen.", "Die Creme dick auf die Brötchenhälften streichen.", "Bei 200 °C ca. 12–15 Min. im Ofen goldgelb überbacken."]
+            },
+            "Milde Familien-Tacos zum Selbstfüllen": {
+                emoji: "🌮", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Knusprige Taco-Schalen und weiche Tortillas mit mildem Hack, Mais und Käse.",
+                kidTip: "Ohne Chili würzen – nur mit edelsüßem Paprikapulver, Tomatenmark und etwas Kreuzkümmel.",
+                ingredients: ["8 Taco-Shells oder kleine Tortillas", "400 g Hackfleisch", "1 kleine Dose Mais & 1 kleine Dose Kidneybohnen", "2 EL Tomatenmark + 1 TL edelsüßes Paprikapulver", "Knackiger Eisbergsalat & gewürfelte Tomaten", "150 g Reibekäse & 150 g Schmand"],
+                instructions: ["Hackfleisch krümelig braten, Tomatenmark, Paprikapulver, Mais, Bohnen und einen Schuss Wasser zugeben. 5 Min. schmoren.", "Taco-Schalen kurz im Ofen erwärmen, Gemüse in kleine Schälchen stellen.", "Am Tisch füllt sich jeder seine Tacos nach Lust und Laune."]
+            },
+            "Bunte Hähnchen-Knusper-Wraps mit mildem Joghurt-Dip": {
+                emoji: "🌯", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Weiche Weizentortillas gefüllt mit saftigem Hähnchen, Gurke, Mais und Joghurt.",
+                kidTip: "Für kleinere Kinder den Wrap unten wie eine Schultüte einschlagen, damit nichts herausfällt.",
+                ingredients: ["6–8 große Tortilla-Wraps", "400 g Hähnchenbrust (oder Knusper-Strips)", "1/2 Salatgurke & 2 Tomaten", "1 kleine Dose Mais", "Knackiger Salat", "250 g milder Naturjoghurt + Kräuter & Salz"],
+                instructions: ["Hähnchen in Streifen schneiden und in der Pfanne goldbraun braten.", "Gurke, Tomaten und Salat klein schneiden. Joghurt mit Kräutern und einer Prise Salz verrühren.", "Wraps in der Pfanne kurz erwärmen, mit Dip bestreichen, belegen und einrollen."]
+            },
+            "Wikingertopf mit Hackbällchen, Erbsen & Möhren": {
+                emoji: "🛡️", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Kleine Fleischbällchen und buntes Gemüse in cremiger Rahmsauce.",
+                kidTip: "Eines der beliebtesten Kindergerichte überhaupt – passt zu Reis, Nudeln oder Kartoffelpüree!",
+                ingredients: ["400 g Hackfleisch", "1 Ei & 3 EL Paniermehl", "300 g TK-Erbsen & Möhren", "250 ml milde Gemüsebrühe", "200 ml Kochsahne", "1 EL Speisestärke", "Beilage nach Wahl (Reis, Püree oder Nudeln)"],
+                instructions: ["Hackfleisch mit Ei, Paniermehl und Salz mischen, kleine Wikinger-Bällchen rollen und in der Pfanne rundum anbraten.", "Erbsen und Möhren dazugeben, mit Brühe und Sahne aufgießen und 10 Min. sanft köcheln.", "Mit etwas angerührter Speisestärke sämig binden und mit Reis oder Püree servieren."]
+            },
+            "Köttbullar (Schwedische Hackbällchen) in Rahmsauce mit Püree": {
+                emoji: "🧆", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Wie im Möbelhaus: Zarte Hackbällchen in heller Rahmsauce mit Kartoffelbrei.",
+                kidTip: "Ein Klecks Preiselbeeren oder Apfelmus auf dem Teller rundet es ab.",
+                ingredients: ["500 g gemischtes Hackfleisch", "1 Ei & 4 EL Paniermehl", "25 g Butter & 2 EL Mehl (für die Sauce)", "300 ml Rinder- oder Gemüsebrühe", "150 ml Sahne", "1 kg Kartoffeln + Milch & Butter fürs Püree"],
+                instructions: ["Kartoffeln kochen und zu cremigem Püree stampfen.", "Aus Hack, Ei, Paniermehl und Salz kleine Bällchen rollen und in Butter rundum braten. Herausnehmen.", "Im Bratensatz Mehl anschwitzen, Brühe und Sahne einrühren, 5 Min. köcheln und Bällchen darin erwärmen."]
+            },
+            "Selbstgemachte Knusper-Hähnchen-Nuggets aus dem Ofen": {
+                emoji: "🐔", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Saftige Hähnchenstücke in superknuspriger Cornflakes-Kruste aus dem Backofen.",
+                kidTip: "Ungesüßte Cornflakes im Gefrierbeutel mit dem Nudelholz zerbröseln – das lieben Kinder!",
+                ingredients: ["500 g Hähnchenbrustfilet", "120 g ungesüßte Cornflakes", "2 Eier", "3 EL Mehl", "1 TL edelsüßes Paprikapulver & Salz", "Dazu: Ofen-Pommes oder Reis & Gurkensalat"],
+                instructions: ["Hähnchen in mundgerechte Nuggets schneiden. Cornflakes fein zerdrücken.", "Hähnchen erst in Mehl, dann in verquirltem Ei und zuletzt in den Cornflakes wenden.", "Auf einem Backblech bei 200 °C ca. 15–18 Min. goldbraun und knusprig backen."]
+            },
+            "Mildes Sonnenschein-Mango-Hähnchen-Curry mit Reis": {
+                emoji: "🥭", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 4, veggie: false,
+                teaser: "Fruchtig-süßes, komplett schärfefreies Hähnchen-Kokos-Curry für die ganze Familie.",
+                kidTip: "Fruchtige Mango und milde Kokosmilch machen dieses Gericht auch für kleine Kinder unwiderstehlich.",
+                ingredients: ["400 g Hähnchenbrust", "250 g Basmatireis", "1 reife Mango (oder 1 kleine Dose Mango)", "400 ml milde Kokosmilch", "1 rote Paprika", "1/2 TL ganz mildes Currypulver oder Kurkuma", "Salz"],
+                instructions: ["Reis kochen. Hähnchenwürfel und Paprikawürfel in einer Pfanne sanft anbraten.", "Mildes Currypulver kurz mitrühren, mit Kokosmilch ablöschen und 8 Min. köcheln.", "Mangowürfel dazugeben (einen Teil gern mitpürieren für eine fruchtige Sauce) und mit Reis servieren."]
+            },
+            "Saftiger Familien-Hackbraten mit Möhren-Erbsen-Gemüse": {
+                emoji: "🍖", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 50, kidsStars: 4, veggie: false,
+                teaser: "Milder Mini-Hackbraten aus dem Ofen mit Rahmgemüse und Salzkartoffeln.",
+                kidTip: "Etwas geriebene Karotte direkt im Hackteig hält den Braten besonders saftig.",
+                ingredients: ["500 g Hackfleisch", "1 Ei & 4 EL Paniermehl", "1 kleine Karotte (fein geraspelt)", "800 g Kartoffeln", "400 g Erbsen und Möhren (TK)", "200 ml Brühe & 100 ml Sahne"],
+                instructions: ["Hackfleisch mit Ei, Paniermehl, geraspelter Karotte und Salz verkneten, zum Laib formen und bei 180 °C mit 200 ml Brühe ca. 35–40 Min. im Ofen garen.", "Kartoffeln in Salzwasser kochen, Erbsen und Möhren dünsten.", "Aus dem Bratensaft und 100 ml Sahne eine milde Rahmsauce rühren."]
+            },
+            "Knuspriges Putenschnitzel Wiener Art mit Pommes & Gurkensalat": {
+                emoji: "🥩", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Zartes Putenschnitzel in goldgelber Panade mit Backofen-Pommes.",
+                kidTip: "Putenbrust in kleine Kinder-Schnitzel teilen – so sind sie in 3 Minuten pro Seite gar.",
+                ingredients: ["4 dünne Putenschnitzel", "2 Eier, 3 EL Mehl & 100 g Paniermehl", "600 g Backofen-Pommes", "1 Salatgurke + Joghurt-Dressing", "Butter oder Öl zum Braten", "Salz"],
+                instructions: ["Backofen-Pommes nach Packung im Ofen knusprig backen.", "Putenschnitzel leicht salzen, in Mehl, Ei und Paniermehl wenden.", "In einer Pfanne mit Butter/Öl je Seite 3–4 Min. goldgelb ausbacken. Mit mildem Gurkensalat servieren."]
+            },
+            "Bunte Quesadillas (Käse-Mais-Fladen aus der Pfanne)": {
+                emoji: "🧀", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 15, kidsStars: 5, veggie: true,
+                teaser: "Knusprige Tortilla-Fladen mit geschmolzenem Käse, süßem Mais und Paprika.",
+                kidTip: "In Dreiecke wie Kuchenstücke geschnitten perfekt für kleine Kinderhände!",
+                ingredients: ["6 Weizentortillas", "200 g geriebener Gouda oder Cheddar", "1 kleine Dose süßer Mais", "1 rote Paprika (sehr fein gewürfelt)", "150 g Kräuterquark oder milder Schmand zum Dippen"],
+                instructions: ["Einen Tortilla-Fladen in eine trockene Pfanne legen.", "Mit Käse, Mais und feinen Paprikawürfeln bestreuen und einen zweiten Fladen darauflegen.", "Bei mittlerer Hitze je Seite 2–3 Min. goldbraun braten, bis der Käse schmilzt. In Dreiecke schneiden."]
+            },
+            "Milde Kinder-Burger zum Selbstbauen": {
+                emoji: "🍔", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Weiche Burger-Brötchen, saftige Mini-Patties, Käse, Gurke und milde Sauce.",
+                kidTip: "Mini-Brioche-Brötchen passen viel besser in kleine Kinderhände als riesige Burger.",
+                ingredients: ["4–6 weiche Burger-Brötchen", "400 g Rinderhackfleisch", "4–6 Scheiben milder Schmelzkäse oder junger Gouda", "Salatblätter, Tomaten- und Gurkenscheiben", "Milder Ketchup & Joghurt-Mayo", "Dazu: Ofenkartoffel-Spalten"],
+                instructions: ["Aus dem Hackfleisch flache Patties formen, mild salzen und in der Pfanne je Seite 4 Min. braten.", "Käsescheibe auflegen und kurz schmelzen lassen. Brötchen kurz anrösten.", "Am Tisch baut sich jedes Kind seinen eigenen Lieblingsburger."]
+            },
+            "Blätterteig-Würstchen im Schlafrock mit Gemüsesticks": {
+                emoji: "🌭", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Kleine Würstchen und Käse in goldbraunem Blätterteig gebacken.",
+                kidTip: "Dazu bunte Rohkost-Sticks (Gurke, Paprika, Möhre) mit Kräuterquark reichen.",
+                ingredients: ["1 Rolle frischer Blätterteig (Kühlregal)", "8 kleine Wiener oder Geflügelwürstchen", "100 g geriebener Gouda", "1 Eigelb + 2 EL Milch zum Bestreichen", "1 Gurke, 2 Karotten & 1 Paprika + Kräuterquark"],
+                instructions: ["Ofen auf 200 °C vorheizen. Blätterteig in 8 Streifen schneiden, mit etwas Käse bestreuen.", "Würstchen darin einwickeln, mit Eigelb-Milch bestreichen und 15–18 Min. goldbraun backen.", "Mit frischen Gemüsesticks und Quark servieren."]
+            },
+            "Cremiges Blumenkohl-Brokkoli-Auflauf-Glück": {
+                emoji: "🥦", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 35, kidsStars: 4, veggie: true,
+                teaser: "Zarte Blumenkohl- und Brokkoliröschen mit Kartoffeln in milder Käse-Sahne-Sauce.",
+                kidTip: "Unter einer goldgelben Käse-Sahne-Decke schmeckt selbst Blumenkohl jedem Kind!",
+                ingredients: ["1 kleiner Blumenkohl & 1 kleiner Brokkoli", "500 g Kartoffeln (gewürfelt)", "30 g Butter & 2 EL Mehl", "250 ml Milch & 200 ml Gemüsebrühe", "180 g geriebener Gouda", "Salz & Muskat"],
+                instructions: ["Kartoffelwürfel und Gemüseröschen 8 Min. in Salzwasser vorgaren, in eine Auflaufform geben.", "Butter schmelzen, Mehl einrühren, mit Milch und Brühe zu einer cremigen Sauce kochen. Hälfte vom Käse darin schmelzen.", "Sauce über das Gemüse gießen, restlichen Käse darüberstreuen und bei 200 °C 20 Min. backen."]
+            },
+            "Fluffiger Flammkuchen (Kinder-Edition mit Mais, Schinken & Käse)": {
+                emoji: "🫓", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Hauchdünner Knusperboden mit Schmand, mildem Kochschinken, Mais und Gouda.",
+                kidTip: "Statt roher Zwiebeln lieben Kinder süßen Mais und etwas Reibekäse auf dem Flammkuchen.",
+                ingredients: ["1–2 Rollen frischer Flammkuchenteig", "200 g Schmand oder Crème fraîche", "150 g gekochter Schinken (gewürfelt)", "1 kleine Dose Mais", "120 g geriebener Gouda", "Schnittlauch"],
+                instructions: ["Ofen auf 220 °C vorheizen. Flammkuchenteig auf dem Blech ausrollen.", "Mit Schmand bestreichen, Schinkenwürfel, Mais und Gouda darauf verteilen.", "12–15 Min. knusprig backen und mit Schnittlauch bestreuen."]
+            },
+            "Milde Gemüse-Nudel-Pfanne mit Ei (Kinder-Bami-Goreng)": {
+                emoji: "🍜", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 20, kidsStars: 4, veggie: true,
+                teaser: "Gebratene Nudeln mit süßen Möhrenstreifen, Erbsen und Rührei.",
+                kidTip: "Normale Spaghetti oder Mie-Nudeln funktionieren beide wunderbar.",
+                ingredients: ["400 g Mie-Nudeln oder Spaghetti", "2 Karotten (in feinen Streifen)", "150 g TK-Erbsen", "3 Eier", "2 EL milde Sojasauce", "1 EL Butter oder mildes Öl"],
+                instructions: ["Nudeln nach Packung garen. Eier in einer großen Pfanne zu Rührei braten und beiseitestellen.", "Karottenstreifen und Erbsen 5 Min. in der Pfanne dünsten.", "Nudeln und Rührei dazugeben, mit milder Sojasauce kurz durchschwenken."]
+            },
+
+            // --- SUPPEN & EINTÖPFE ---
+            "Milde Familien-Ramen-Nudelsuppe mit Ei & Mais": {
+                emoji: "🍜", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 15, kidsStars: 5, veggie: true,
+                teaser: "Warme Schlürf-Nudelsuppe mit wachsweichem Ei, süßem Mais und milder Brühe.",
+                kidTip: "Ohne scharfe Gewürzpäckchen kochen – stattdessen milde Brühe und 1 EL Sojasauce nehmen!",
+                ingredients: ["300 g Mie- oder Ramen-Nudeln (ohne scharfe Würzmischung)", "1 l milde Gemüse- oder Hühnerbrühe", "4 Eier", "1 kleine Dose süßer Mais", "1 Karotte (in feinen Streifen)", "2 EL milde Sojasauce & 1 TL Sesamöl"],
+                instructions: ["Eier 6–7 Min. wachsweich kochen, abschrecken, pellen und halbieren.", "Brühe mit Karottenstreifen, Mais und Sojasauce aufkochen, Nudeln darin 4 Min. garen.", "In Schüsseln füllen, die halbierten Eier daraufsetzen und mit einem Tropfen Sesamöl servieren."]
+            },
+            "Bunte Buchstabensuppe mit kleinen Gemüsewürfeln": {
+                emoji: "🔤", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Der Klassiker zum Namen-Schreiben am Suppenteller-Rand!",
+                kidTip: "Jedes Kind sucht zuerst die Buchstaben seines eigenen Vornamens in der Schüssel.",
+                ingredients: ["150 g Buchstabennudeln", "1,2 l milde Gemüse- oder Hühnerbrühe", "2 Karotten (sehr fein gewürfelt)", "100 g TK-Erbsen", "1 EL Butter", "Petersilie"],
+                instructions: ["Fein gewürfelte Karotten in Butter kurz andünsten und mit Brühe aufgießen.", "Buchstabennudeln und Erbsen dazugeben und 8–10 Min. sanft köcheln, bis alles weich ist.", "Mit fein gehackter Petersilie servieren."]
+            },
+            "Gespenstersuppe (Cremige weiße Bohnensuppe)": {
+                emoji: "👻", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Samtig-weiße, supermilde Cremesuppe mit knusprigen Brot-Gespenstern.",
+                kidTip: "Aus Toastbrot kleine Gespenster ausstechen und in Butter zu Croutons rösten!",
+                ingredients: ["2 Dosen weiße Riesenbohnen oder Cannellini-Bohnen (abgetropft)", "1 kleine Kartoffel (für noch mehr Cremigkeit)", "1 milde Zwiebel", "750 ml Gemüsebrühe", "200 ml Sahne", "4 Scheiben Toastbrot (als Croutons)", "Salz, Muskat & Schnittlauch"],
+                instructions: ["Zwiebel und gewürfelte Kartoffel in etwas Butter andünsten, Bohnen und Brühe zugeben. 15 Min. weich köcheln.", "Mit dem Pürierstab fein und samtig pürieren, Sahne einrühren und mild mit Salz und Muskat abschmecken.", "Mit gerösteten Toast-Croutons und Schnittlauch servieren."]
+            },
+            "Omas milde Gemüsesuppe mit Sternchennudeln": {
+                emoji: "🥣", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 25, kidsStars: 4, veggie: true,
+                teaser: "Farbenfrohe Suppe mit Kartoffeln, Möhren, Erbsen und kleinen Sternchennudeln.",
+                kidTip: "Sternchennudeln machen aus jeder gesunden Gemüsesuppe ein Kinder-Highlight.",
+                ingredients: ["3 Karotten & 2 Kartoffeln", "150 g TK-Erbsen", "100 g kleine Sternchen- oder Muschelnudeln", "1,3 l milde Gemüsebrühe", "1 EL Butter", "Petersilie & Salz"],
+                instructions: ["Karotten und Kartoffeln in kleine Würfel schneiden, in Butter andünsten und mit Brühe aufgießen.", "10 Min. köcheln, dann Sternchennudeln und Erbsen zugeben und weitere 8 Min. garen.", "Mit Petersilie bestreuen."]
+            },
+            "Milde Familien-Linsensuppe mit Wiener Würstchen": {
+                emoji: "🍲", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 35, kidsStars: 4, veggie: false,
+                teaser: "Sämiger Linseneintopf mit Kartoffelwürfeln, Möhren und Würstchenscheiben.",
+                kidTip: "Nur einen winzigen Hauch Essig oder lieber einen Schuss Apfelsaft zum Abschmecken nehmen.",
+                ingredients: ["250 g Tellerlinsen (oder rote Linsen für 15-Min-Version)", "3 Kartoffeln & 2 Karotten", "4 Wiener Würstchen", "1,3 l Gemüsebrühe", "1 EL Butter", "Salz & Petersilie"],
+                instructions: ["Gewürfelte Kartoffeln und Karotten mit gewaschenen Linsen in der Brühe ca. 25–30 Min. weich kochen.", "Würstchen in Scheiben schneiden und in den letzten 5 Minuten in der Suppe heiß ziehen lassen.", "Mild abschmecken und servieren."]
+            },
+            "Bohnensuppe mit Eierkuchen-Streifen": {
+                emoji: "🥞", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 30, kidsStars: 4, veggie: true,
+                teaser: "Herzhafte milde Bohnen-Gemüse-Suppe mit goldenen Pfannkuchen-Streifen.",
+                kidTip: "Die Eierkuchen-Streifen (Flädle) machen die Suppe zum Lieblingsgericht!",
+                ingredients: ["2 Dosen weiße Bohnen (oder vorgekochte Bohnen)", "2 Kartoffeln & 2 Karotten", "1,2 l Gemüsebrühe", "2 Eier, 150 ml Milch & 100 g Mehl (für die Eierkuchen)", "Butter zum Backen", "Salz & Petersilie"],
+                instructions: ["Kartoffel- und Karottenwürfel in der Brühe 15 Min. kochen, abgetropfte Bohnen zugeben und 5 Min. mitwärmen.", "Aus Eiern, Milch, Mehl und einer Prise Salz 2–3 dünne Eierkuchen in der Pfanne backen.", "Eierkuchen aufrollen, in Streifen schneiden und in die Suppe geben."]
+            },
+            "Samtige Kartoffelsuppe mit Wiener Würstchen & Croutons": {
+                emoji: "🥔", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Cremig pürierte Kartoffel-Möhren-Suppe mit Würstchenscheiben.",
+                kidTip: "Cremig püriert ohne große Gemüsebrocken essen auch kleine Suppen-Skeptiker sofort mit.",
+                ingredients: ["800 g mehligkochende Kartoffeln", "2 Karotten", "1 l milde Gemüsebrühe", "150 ml Sahne", "4 Wiener Würstchen (in Scheiben)", "Butter-Croutons & Schnittlauch"],
+                instructions: ["Kartoffeln und Karotten schälen, würfeln und in der Brühe 20 Min. weich kochen.", "Mit Sahne fein pürieren, mild mit Salz und einer Prise Muskat abschmecken.", "Würstchenscheiben darin erwärmen und mit Croutons servieren."]
+            },
+            "Sonnengelbe Kürbis-Karotten-Cremesuppe (ohne Ingwer-Schärfe)": {
+                emoji: "🎃", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Leuchtend orange, natürlich süßlich durch Hokkaido-Kürbis, Möhren und Orangensaft.",
+                kidTip: "Auf scharfen Ingwer verzichten – stattdessen macht ein Schuss milder Orangensaft die Suppe fruchtig!",
+                ingredients: ["600 g Hokkaido-Kürbis (mit Schale gewürfelt)", "3 Karotten & 2 Kartoffeln", "800 ml Gemüsebrühe", "150 ml Sahne oder Kokosmilch", "100 ml milder Orangensaft", "Kürbiskerne oder Croutons"],
+                instructions: ["Kürbis-, Karotten- und Kartoffelwürfel in der Brühe 20 Min. weich kochen.", "Sahne und Orangensaft zugeben und alles samtig pürieren.", "Mit einer Prise Salz abschmecken und mit Croutons servieren."]
+            },
+            "Cremige Tomatensuppe mit Reis oder Mini-Mozzarella": {
+                emoji: "🍅", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Samtige Tomaten-Rahmsuppe mit lockerem Reis wie aus der Kindheit.",
+                kidTip: "Kleine Mini-Mozzarella-Kugeln schmelzen in der warmen Suppe zu lustigen Käse-Inseln.",
+                ingredients: ["800 ml passierte Tomaten", "400 ml milde Gemüsebrühe", "150 ml Sahne", "120 g gekochter Reis (oder kleine Suppennudeln)", "100 g Mini-Mozzarella", "1 EL Butter & 1 TL Zucker", "Basilikum & Salz"],
+                instructions: ["Passierte Tomaten und Brühe mit Butter und 1 TL Zucker 10 Min. sanft köcheln.", "Sahne einrühren und mild abschmecken.", "Gekochten Reis und kleine Mozzarella-Perlen direkt in die Schüsseln geben."]
+            },
+            "Omas Hühnersuppe mit Eierstich & Muschelnudeln": {
+                emoji: "🍲", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Wohlfühl-Suppe mit zartem Hühnchen, Möhrenscheiben und kleinem Nudeln.",
+                kidTip: "Die beste Seelentröster-Suppe an kalten oder regnerischen Tagen.",
+                ingredients: ["350 g Hähnchenbrust", "2 Karotten (in dünnen Scheiben)", "150 g kleine Muschelnudeln", "1,3 l milde Hühnerbrühe", "100 g TK-Erbsen", "Petersilie"],
+                instructions: ["Hähnchenbrust im Ganzen mit den Karottenscheiben 15 Min. in der Brühe sanft gar ziehen lassen.", "Hähnchen herausnehmen und mit zwei Gabeln in kleine, zarte Stücke zupfen.", "Muschelnudeln und Erbsen 8 Min. in der Brühe kochen, Hähnchen wieder zugeben und servieren."]
+            },
+            "Pfannkuchensuppe (Flädlesuppe mit feinen Gemüsewürfeln)": {
+                emoji: "🥣", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Goldene Pfannkuchen-Schlangen in klarer, milder Gemüsebrühe.",
+                kidTip: "Kinder lieben es, die aufgerollten Pfannkuchen selbst mit dem Kindermesser in Schnecken zu schneiden.",
+                ingredients: ["2 Eier, 180 ml Milch & 100 g Mehl", "1 l milde Gemüse- oder Hühnerbrühe", "1 Karotte (sehr fein geraspelt)", "1 Bund Schnittlauch", "Butter zum Ausbacken"],
+                instructions: ["Aus Eiern, Milch, Mehl und einer Prise Salz dünne Pfannkuchen in Butter backen, aufrollen und in Streifen schneiden.", "Brühe mit der fein geraspelten Karotte 5 Min. köcheln.", "Pfannkuchenstreifen und Schnittlauch in Schüsseln verteilen und mit der heißen Brühe übergießen."]
+            },
+            "Milde Käse-Lauch-Hackfleisch-Suppe (mit Mais)": {
+                emoji: "🧀", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 25, kidsStars: 4, veggie: false,
+                teaser: "Cremige Schmelzkäse-Suppe mit mild gedünstetem Lauch, Hackfleisch und süßem Mais.",
+                kidTip: "Süßer Dosenmais macht die herzhafte Käsesuppe sofort kinderfreundlich!",
+                ingredients: ["400 g Hackfleisch", "1 Stange Lauch (nur der helle, milde Teil in feinen Ringen)", "1 kleine Dose süßer Mais", "750 ml Gemüsebrühe", "200 g milder Sahne-Schmelzkäse & 100 g Crème fraîche", "Dazu: Knuspriges Baguette"],
+                instructions: ["Hackfleisch krümelig anbraten, feine Lauchringe 5 Min. weich mitdünsten.", "Mit Brühe ablöschen, Mais zugeben und 10 Min. sanft köcheln.", "Schmelzkäse und Crème fraîche darin schmelzen lassen und mit Baguette servieren."]
+            },
+
+            // --- SÜSSE HAUPTGERICHTE ---
+            "Cremiger Grießbrei mit Zimt, Zucker & warmen Beeren": {
+                emoji: "🥣", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 10, kidsStars: 5, veggie: true,
+                teaser: "In 10 Minuten auf dem Tisch: Fluffiger Milch-Grießbrei wie im Kindergarten.",
+                kidTip: "Ein kleines Butterflöckchen in der Mitte schmilzt zu einem goldenen See.",
+                ingredients: ["1 l Milch", "100 g Weichweizengrieß", "3 EL Zucker & 1 Pck. Vanillezucker", "1 Prise Salz", "Zimt & Zucker, Apfelmus oder Beeren zum Toppen"],
+                instructions: ["Milch mit Zucker, Vanillezucker und einer Prise Salz aufkochen.", "Grieß unter Rühren mit dem Schneebesen einrieseln lassen und auf kleinster Stufe 3 Min. quellen lassen.", "In Schälchen füllen und mit Zimt & Zucker oder Früchten servieren."]
+            },
+            "Fluffige Hefeklöße (Dampfnudeln) mit warmer Vanillesauce": {
+                emoji: "🥟", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 45, kidsStars: 5, veggie: true,
+                teaser: "Wolkenweiche Hefeklöße in einem Meer aus warmer Vanillesauce.",
+                kidTip: "Mit Heidelbeeren oder Kirschen dazu ein echtes Sonntags-Lieblingsessen.",
+                ingredients: ["500 g Mehl", "1 Würfel frische Hefe (oder 1 Pck. Trockenhefe)", "250 ml lauwarme Milch", "50 g Zucker & 50 g weiche Butter", "1 Ei & 1 Prise Salz", "500 ml warme Vanillesauce"],
+                instructions: ["Hefe in lauwarmer Milch mit Zucker auflösen, mit Mehl, Butter, Ei und Salz zu einem glatten Teig kneten. 30 Min. gehen lassen.", "8 runde Klöße formen und über Wasserdampf oder in leicht siedendem Wasser zugedeckt 15 Min. gar ziehen lassen.", "Mit reichlich warmer Vanillesauce servieren."]
+            },
+            "Goldgelbe Apfelpfannkuchen (Eierkuchen)": {
+                emoji: "🥞", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Dünne, weiche Familien-Pfannkuchen mit süßen Apfelscheiben.",
+                kidTip: "Teig 5 Minuten ruhen lassen, dann reißen die Pfannkuchen beim Wenden garantiert nicht!",
+                ingredients: ["250 g Mehl", "400 ml Milch", "3 Eier", "1 Prise Salz & 1 Pck. Vanillezucker", "2 süße Äpfel (in dünnen Scheiben)", "Butter zum Ausbacken & etwas Zimt-Zucker"],
+                instructions: ["Mehl, Milch, Eier, Salz und Vanillezucker zu einem glatten Teig verrühren.", "In einer Pfanne etwas Butter schmelzen, eine Kelle Teig hineingeben und Apfelscheiben darauflegen.", "Von beiden Seiten goldgelb backen."]
+            },
+            "Kaiserschmarrn mit Apfelmus (ohne Alkohol)": {
+                emoji: "👑", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Luftig gezupfter Pfannkuchenteig, leicht karamellisiert mit Puderzucker.",
+                kidTip: "Rosinen entweder weglassen oder vorher in warmem Apfelsaft einweichen.",
+                ingredients: ["4 Eier", "200 g Mehl", "250 ml Milch", "2 EL Zucker & 1 Pck. Vanillezucker", "40 g Butter", "1 Glas Apfelmus & etwas Puderzucker"],
+                instructions: ["Eigelb mit Milch, Mehl und Vanillezucker glatt rühren. Eiweiß steif schlagen und vorsichtig unterheben.", "In einer großen Pfanne in Butter bei mittlerer Hitze unten goldbraun backen, vierteln, wenden und in mundgerechte Stücke zupfen.", "Mit Puderzucker bestäuben und mit Apfelmus servieren."]
+            },
+            "Cremiger Milchreis mit Zimt-Zucker & warmen Kirschen": {
+                emoji: "🍚", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 35, kidsStars: 5, veggie: true,
+                teaser: "Schlotziger Vanille-Milchreis mit fruchtigen Schattenmorellen oder Apfelmus.",
+                kidTip: "Gelegentlich umrühren und auf kleinster Hitze ziehen lassen, damit nichts anbrennt.",
+                ingredients: ["250 g Milchreis", "1 l Milch", "2 EL Zucker & 1 Pck. Vanillezucker", "1 Prise Salz", "1 Glas Kirschen (mit 1 EL Speisestärke angedickt) oder Zimt & Zucker"],
+                instructions: ["Milch mit Milchreis, Vanillezucker und Salz kurz aufkochen.", "Hitze ganz klein stellen und zugedeckt unter gelegentlichem Rühren ca. 25–30 Min. cremig quellen lassen.", "Mit warmen Kirschen, Apfelmus oder Zimt & Zucker servieren."]
+            },
+            "Arme Ritter (French Toast) mit Beeren & Ahornsirup": {
+                emoji: "🍞", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 15, kidsStars: 5, veggie: true,
+                teaser: "In Ei-Milch gebadete Hefezopf- oder Toastscheiben, goldbraun in Butter gebacken.",
+                kidTip: "Perfekt, um Brioche, Hefezopf oder Toastbrot vom Vortag in ein Festessen zu verwandeln!",
+                ingredients: ["8 Scheiben Brioche, Hefezopf oder Toastbrot", "3 Eier", "150 ml Milch", "1 Pck. Vanillezucker & 1/2 TL Zimt", "2 EL Butter", "Frische Beeren, Bananenscheiben oder Apfelmus"],
+                instructions: ["Eier mit Milch, Vanillezucker und Zimt in einem tiefen Teller verquirlen.", "Brotscheiben von beiden Seiten kurz darin wenden und in einer Pfanne mit Butter goldbraun ausbacken.", "Mit frischen Früchten oder Apfelmus servieren."]
+            },
+            "Fluffige Quarkkeulchen mit Apfelmus": {
+                emoji: "🥞", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Weiche kleine Kartoffel-Quark-Taler aus der Pfanne.",
+                kidTip: "Ein wunderbares Gericht, wenn vom Vortag noch gekochte Kartoffeln übrig sind!",
+                ingredients: ["500 g gekochte Kartoffeln (vom Vortag, fein gestampft)", "250 g Speisequark", "2 Eier", "120 g Mehl", "40 g Zucker & 1 Pck. Vanillezucker", "Butter zum Braten & Apfelmus"],
+                instructions: ["Gestampfte Kartoffeln mit Quark, Eiern, Mehl, Zucker und Vanillezucker zu einem weichen Teig verkneten.", "Kleine flache Taler formen und in Butter bei mittlerer Hitze je Seite 4 Min. goldbraun braten.", "Warm mit Apfelmus servieren."]
+            },
+            "Bananen-Haferflocken-Pancakes": {
+                emoji: "🍌", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 15, kidsStars: 5, veggie: true,
+                teaser: "Kleine, dicke Mini-Pfannkuchen – natürlich süß durch reife Bananen.",
+                kidTip: "Kommen fast ohne zusätzlichen Zucker aus und machen lange satt.",
+                ingredients: ["2 reife Bananen", "2 Eier", "150 ml Milch", "120 g Mehl & 60 g zarte Haferflocken", "1,5 TL Backpulver", "Butter zum Ausbacken & Beeren"],
+                instructions: ["Bananen mit einer Gabel fein zerdrücken und mit Eiern und Milch verrühren.", "Mehl, Haferflocken und Backpulver unterrühren.", "Kleine Kleckse in die Pfanne setzen und von beiden Seiten goldbraun backen."]
+            },
+            "Herzhafte & Süße Familien-Waffeln aus dem Waffeleisen": {
+                emoji: "🧇", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 20, kidsStars: 5, veggie: true,
+                teaser: "Knusprig-weiche Herzwaffeln mit Puderzucker, Apfelmus oder frischen Erdbeeren.",
+                kidTip: "Ein Teil des Mineralwassers im Teig macht die Waffeln besonders locker.",
+                ingredients: ["125 g weiche Butter", "70 g Zucker & 1 Pck. Vanillezucker", "3 Eier", "250 g Mehl & 1 TL Backpulver", "200 ml Milch & 50 ml Sprudelwasser", "Apfelmus, Beeren oder Puderzucker"],
+                instructions: ["Butter mit Zucker und Vanillezucker schaumig rühren, Eier einzeln unterrühren.", "Mehl, Backpulver und Milch abwechselnd einrühren, am Ende Sprudelwasser zugeben.", "Im Waffeleisen goldgelbe Herzwaffeln backen."]
+            },
+            "Süßer Scheiterhaufen (Apfel-Brot-Auflauf mit Vanilleguss)": {
+                emoji: "🍎", category: "suess", categoryLabel: "Süße Hauptgerichte", time: 35, kidsStars: 5, veggie: true,
+                teaser: "Warmer Ofenauflauf aus Hefezopf, süßen Äpfeln und cremiger Vanille-Ei-Milch.",
+                kidTip: "Duftet im ganzen Haus wie auf dem Weihnachtsmarkt!",
+                ingredients: ["400 g Hefezopf, Brioche oder Weißbrot (gewürfelt)", "3 süße Äpfel (in dünnen Scheiben)", "350 ml Milch & 100 ml Sahne", "3 Eier", "40 g Zucker, 1 Pck. Vanillezucker & 1/2 TL Zimt", "Butterflöckchen"],
+                instructions: ["Brotwürfel und Apfelscheiben abwechselnd in eine gefettete Auflaufform schichten.", "Milch, Sahne, Eier, Zucker, Vanillezucker und Zimt verquirlen und darüber gießen. 5 Min. ziehen lassen.", "Bei 180 °C ca. 25–30 Min. goldbraun backen."]
+            },
+
+            // --- WEITERE KINDER-LIEBLINGE ---
+            "Cremiges Butter-Hähnchen (Kids Mild Butter Chicken) mit Reis": {
+                emoji: "🍛", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Zarte Hähnchenstücke in samtiger, milder Tomaten-Butter-Sahne-Sauce.",
+                kidTip: "Komplett ohne Chili – schmeckt wie eine herrlich cremige Tomatensuppen-Sauce zu Reis!",
+                ingredients: ["500 g Hähnchenbrust", "250 g Basmatireis", "400 ml passierte Tomaten", "200 ml Sahne", "40 g Butter", "1 TL edelsüßes Paprikapulver & 1 Prise Zimt", "1 TL Zucker & Salz"],
+                instructions: ["Reis kochen. Hähnchen in Würfel schneiden und in 20 g Butter rundum anbraten.", "Passierte Tomaten, Sahne, Paprikapulver, Zucker und Salz zugeben und 12 Min. cremig köcheln.", "Am Ende die restlichen 20 g Butter einrühren und mit Reis servieren."]
+            },
+            "Knusprige Mozzarella-Sticks & Gemüsesticks mit Kartoffelspalten": {
+                emoji: "🧀", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 5, veggie: true,
+                teaser: "Fäden ziehende Käse-Sticks aus dem Ofen mit buntem Fingerfood-Teller.",
+                kidTip: "Kinder lieben Fingerfood-Abende, bei denen alles gedippt werden darf.",
+                ingredients: ["1 Packung Mozzarella-Sticks (TK oder frisch paniert)", "800 g Kartoffel-Wedges (Ofen)", "1 Gurke, 2 Karotten & 1 rote Paprika (in Sticks)", "250 g milder Kräuterquark & Tomaten-Dip"],
+                instructions: ["Kartoffel-Wedges und Mozzarella-Sticks nach Packungsangabe im Ofen knusprig backen.", "Währenddessen Gurke, Möhren und Paprika in handliche Sticks schneiden.", "Alles zusammen mit Kräuterquark und mildem Tomaten-Dip auf einer großen Familienplatte servieren."]
+            },
+            "Überbackene Schinken-Käse-Hörnchennudeln (Schinkennudeln)": {
+                emoji: "🍝", category: "pasta", categoryLabel: "Pasta & Klöße", time: 20, kidsStars: 5, veggie: false,
+                teaser: "Gebratene Nudeln mit mildem Kochschinken, Ei und geschmolzenem Gouda.",
+                kidTip: "Dazu ein kleiner Klecks milder Ketchup und Gurkensalat – alle Teller sind leer!",
+                ingredients: ["500 g Hörnchennudeln", "150 g gekochter Schinken (gewürfelt)", "3 Eier", "50 ml Milch", "120 g geriebener Gouda", "2 EL Butter & Schnittlauch"],
+                instructions: ["Hörnchennudeln in Salzwasser kochen und abgießen.", "Schinkenwürfel und Nudeln in einer großen Pfanne in Butter anbraten.", "Eier mit Milch und einer Prise Salz verquirlen, darüber gießen, stocken lassen und den Käse darüber schmelzen."]
+            },
+            "Zarte Hähnchen-Spieße mit mildem Erdnuss-Rahm & Reis": {
+                emoji: "🍢", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 4, veggie: false,
+                teaser: "Kleine Holzspieße mit saftigem Hähnchen, süßlicher Sauce und Gurkenscheiben.",
+                kidTip: "Alles am Spieß schmeckt Kindern doppelt so gut (Holzspitzen ggf. kurz abknipsen).",
+                ingredients: ["500 g Hähnchenbrust", "250 g Basmatireis", "2 EL cremige Erdnussbutter (oder Frischkäse bei Nussallergie)", "200 ml Kokosmilch oder Sahne", "1 EL milde Sojasauce & 1 TL Honig", "1 Salatgurke"],
+                instructions: ["Reis kochen. Hähnchen in Würfel schneiden, auf kleine Holzspieße stecken und in der Pfanne rundum 8–10 Min. braten.", "Erdnussbutter mit Kokosmilch/Sahne, Sojasauce und Honig in einem kleinen Topf glatt erwärmen.", "Spieße mit Reis, Sauce und frischen Gurkenscheiben servieren."]
+            },
+            "Mildes Gemüse-Risotto mit Erbsen & Parmesan (Kinder-Risotto)": {
+                emoji: "🍚", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 4, veggie: true,
+                teaser: "Löffelweicher, schlotziger Butter-Parmesan-Reis mit süßen grünen Erbsen.",
+                kidTip: "Komplett ohne Weißwein gekocht – nur mit milder Gemüsebrühe, Butter und Käse!",
+                ingredients: ["300 g Risottoreis (z.B. Arborio)", "1 l warme, milde Gemüsebrühe", "200 g TK-Erbsen", "1 kleine Karotte (sehr fein geraspelt)", "40 g Butter", "80 g frisch geriebener Parmesan"],
+                instructions: ["Fein geraspelte Karotte und Risottoreis in 20 g Butter kurz anschwitzen.", "Nach und nach warme Brühe unter Rühren zugießen und ca. 18–20 Min. cremig garen.", "In den letzten 4 Min. die Erbsen mitgaren, am Ende restliche Butter und Parmesan unterrühren."]
+            },
+            "Knusprige Halloumi- oder Grillkäse-Burger mit Ofenkartoffeln": {
+                emoji: "🍔", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 25, kidsStars: 4, veggie: true,
+                teaser: "Mild-würziger, goldbraun gebratener Pfannenkäse im weichen Burger-Brötchen.",
+                kidTip: "Milderen Grillkäse oder Panir wählen, der nicht zu salzig ist.",
+                ingredients: ["2 Packungen milder Grillkäse oder Halloumi (in Scheiben)", "4 weiche Burger-Brötchen", "Salat, Tomatenscheiben & Gurke", "Milder Honig-Senf-Joghurt oder Ketchup", "600 g Ofenkartoffel-Spalten"],
+                instructions: ["Kartoffelspalten im Ofen knusprig backen.", "Grillkäse-Scheiben in einer Pfanne mit wenig Öl von beiden Seiten goldbraun braten.", "In den erwärmten Burger-Brötchen mit Salat, Tomate und milder Sauce servieren."]
+            },
+            "Bunte Nudel-Muffins (Gebackene Spaghetti-Nester)": {
+                emoji: "🧁", category: "pasta", categoryLabel: "Pasta & Klöße", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Handliche Spaghetti-Käse-Küchlein aus dem Muffinblech mit Tomatensauce.",
+                kidTip: "Kinder lieben Essen in Muffinform! Perfekt auch fürs Familien-Picknick.",
+                ingredients: ["350 g Spaghetti", "2 Eier", "100 ml Milch", "150 g geriebener Gouda", "100 g feine Schinkenwürfel (oder Mais für Veggie)", "300 ml warme Tomatensauce zum Dippen"],
+                instructions: ["Spaghetti kochen, abgießen und mit verquirlten Eiern, Milch, Schinken/Mais und der Hälfte vom Käse mischen.", "Mit einer Gabel kleine Nester in ein gefettetes Muffinblech drehen und mit restlichem Käse bestreuen.", "Bei 190 °C ca. 15–18 Min. goldbraun backen und mit warmer Tomatensauce servieren."]
+            },
+            "Zarte Putengeschnetzeltes-Pfanne 'Zürcher Art' mit Rösti-Ecken": {
+                emoji: "🥘", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Knusprige Kartoffel-Rösti aus dem Ofen mit zartem Putenfleisch in Rahmsauce.",
+                kidTip: "Rösti-Ecken oder Kroketten im Ofen mitbacken – zum Eintunken in die Sauce ideal!",
+                ingredients: ["500 g Putenbrustfilet (in Streifen)", "1 Packung Rösti-Ecken oder Kroketten (TK)", "150 g Champignons oder Karottenscheiben", "200 ml Sahne & 100 ml milde Brühe", "1 EL Butter", "Petersilie & Salz"],
+                instructions: ["Rösti-Ecken oder Kroketten im Backofen nach Packung goldbraun backen.", "Putenstreifen in Butter rundum anbraten, Gemüse kurz mitdünsten.", "Mit Brühe und Sahne ablöschen, 6 Min. sämig einkochen und zusammen servieren."]
+            },
+            "Gefüllte Pfannkuchen-Rollen mit Schinken & Käse überbacken": {
+                emoji: "🥞", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Herzhafte Eierkuchen, gefüllt mit mildem Schinken und geschmolzenem Gouda.",
+                kidTip: "Für Vegetarier einfach mit Frischkäse, süßem Mais und Gouda füllen.",
+                ingredients: ["250 g Mehl, 450 ml Milch & 3 Eier (für 6–8 dünne Pfannkuchen)", "150 g gekochter Schinken", "200 g geriebener Gouda", "150 g Kräuterfrischkäse oder Schmand", "Schnittlauch & eine Prise Salz"],
+                instructions: ["Aus Mehl, Milch, Eiern und Salz dünne Pfannkuchen in der Pfanne backen.", "Jeden Pfannkuchen mit etwas Frischkäse bestreichen, mit Schinken und Käse belegen und aufrollen.", "In eine Auflaufform legen, mit restlichem Käse bestreuen und bei 190 °C 10 Min. überbacken."]
+            },
+            "Lustige Kartoffel-Kroketten mit Rahm-Hähnchen & Erbsen": {
+                emoji: "🍗", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Knusprige Kroketten mit saftiger Hähnchenbrust und mildem Erbsen-Möhren-Rahm.",
+                kidTip: "Kroketten sind für viele Kinder das absolute Festtags-Highlight.",
+                ingredients: ["1 Packung Kartoffelkroketten (TK)", "500 g Hähnchenbrustfilet", "300 g TK-Erbsen und Möhren", "200 ml Kochsahne & 100 ml Brühe", "1 EL Butter", "Salz"],
+                instructions: ["Kroketten im Backofen bei 200 °C knusprig goldbraun backen.", "Hähnchenbrust in Medaillons schneiden und in Butter je Seite 4 Min. saftig braten.", "Erbsen und Möhren mit Brühe und Sahne in die Pfanne geben, 6 Min. köcheln und mit den Kroketten servieren."]
+            },
+            "Milde Lasagne al Forno (Familien-Auflauf)": {
+                emoji: "🫕", category: "pasta", categoryLabel: "Pasta & Klöße", time: 50, kidsStars: 5, veggie: false,
+                teaser: "Schicht für Schicht weiche Lasagneplatten, milde Bolognese und cremige Käsesauce.",
+                kidTip: "Lasagne nach dem Backen 5 Minuten ruhen lassen – dann lässt sie sich sauber schneiden und ist nicht zu heiß für Kinder.",
+                ingredients: ["12 Lasagneplatten (ohne Vorkochen)", "400 g Hackfleisch", "1 Karotte (fein geraspelt) & 1 Zwiebel", "600 ml passierte Tomaten", "200 g Crème fraîche + 100 ml Milch", "200 g geriebener Gouda oder Mozzarella", "Salz & Oregano"],
+                instructions: ["Hackfleisch mit Zwiebel und geraspelter Karotte anbraten, passierte Tomaten und Oregano zugeben und 10 Min. köcheln.", "Crème fraîche mit Milch und einer Prise Salz glatt rühren (schnelle Kinder-Béchamelsauce).", "Abwechselnd Sauce, Lasagneplatten und Crème-fraîche-Guss schichten, mit Käse bestreuen und bei 190 °C 30–35 Min. backen."]
+            },
+            "Bunte Gemüse-Reis-Bällchen aus dem Ofen mit Kräuter-Dip": {
+                emoji: "🍙", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 30, kidsStars: 4, veggie: true,
+                teaser: "Außen knusprig, innen cremig mit geschmolzenem Käse, Reis und Möhren.",
+                kidTip: "Kinder können die lauwarmen Reis-Käse-Bällchen wunderbar selbst mitrollen.",
+                ingredients: ["250 g Risotto- oder Milchreis (in Gemüsebrühe gekocht)", "1 Karotte (fein geraspelt) & 100 g TK-Erbsen", "2 Eier", "150 g geriebener Gouda", "4 EL Paniermehl", "300 g milder Kräuterquark zum Dippen"],
+                instructions: ["Reis mit der geraspelten Karotte und den Erbsen in milder Gemüsebrühe weich kochen und etwas abkühlen lassen.", "Eier, Gouda und Paniermehl unterkneten und mit feuchten Händen kleine Bällchen formen.", "Auf einem Backblech bei 200 °C ca. 20 Min. goldbraun backen und mit Kräuterquark dippen."]
+            },
+            "Überbackene Hawaii-Toasts (oder Bauern-Toasts mit Mais & Paprika)": {
+                emoji: "🥪", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 15, kidsStars: 5, veggie: false,
+                teaser: "Der schnelle Familien-Klassiker an langen Tagen: Knuspriger Toast aus dem Ofen.",
+                kidTip: "Wer keine warme Ananas mag, belegt seinen Toast mit süßem Mais, Paprika oder Tomatenscheiben!",
+                ingredients: ["8 Scheiben Vollkorn- oder Buttertoast", "8 Scheiben gekochter Schinken", "1 Dose Ananasringe (oder Mais & Tomatenscheiben)", "8 Scheiben Schmelzkäse oder junger Gouda", "Etwas Butter"],
+                instructions: ["Toastscheiben leicht antoasten und dünn mit Butter bestreichen.", "Mit Schinken, gut abgetropfter Ananas (oder Tomate/Mais) und einer Scheibe Käse belegen.", "Im vorgeheizten Ofen bei 200 °C ca. 8–10 Min. überbacken, bis der Käse schmilzt."]
+            },
+            "Knusprige Backfisch-Sticks mit Remoulade & Salzkartoffeln": {
+                emoji: "🐟", category: "kartoffel", categoryLabel: "Kartoffel-Hits", time: 25, kidsStars: 5, veggie: false,
+                teaser: "Mildes Seelachsfilet im Backteig mit Butterkartoffeln und Gurkensalat.",
+                kidTip: "Gurkensalat mit mildem Joghurt-Dressing passt perfekt zum knusprigen Backfisch.",
+                ingredients: ["4–6 Backfisch-Filets (TK, aus dem Ofen)", "800 g festkochende Kartoffeln", "1 Salatgurke", "150 g Joghurt + Schnittlauch", "Milde Kinder-Remoulade oder Ketchup", "2 EL Butter"],
+                instructions: ["Backfisch auf einem Blech mit Backpapier im Ofen nach Packung knusprig backen.", "Kartoffeln schälen, in Salzwasser 20 Min. kochen und in etwas Butter schwenken.", "Gurke hobeln, mit Joghurt und Schnittlauch mischen und alles zusammen anrichten."]
+            },
+            "Saftige Hähnchen-Quesadilla-Rollen (Enchiladas Mild)": {
+                emoji: "🌯", category: "ofen", categoryLabel: "Ofen & Pfanne", time: 30, kidsStars: 5, veggie: false,
+                teaser: "Mit Hähnchen, Frischkäse und Mais gefüllte Tortillas, im Ofen mit Käse überbacken.",
+                kidTip: "So weich und saftig, dass man sie direkt mit der Gabel essen kann.",
+                ingredients: ["6 Weizentortillas", "350 g Hähnchenbrust (klein gewürfelt & gebraten)", "150 g Frischkäse", "1 kleine Dose Mais", "300 ml passierte Tomaten + 100 ml Sahne", "150 g geriebener Gouda"],
+                instructions: ["Gebratene Hähnchenwürfel mit Frischkäse und Mais mischen, in die Tortillas rollen und in eine Auflaufform legen.", "Passierte Tomaten mit Sahne und einer Prise Salz verrühren, darüber gießen und mit Gouda bestreuen.", "Bei 190 °C ca. 18 Min. goldgelb überbacken."]
+            },
+            "Milde Kartoffel-Lauch-Cremesuppe mit Lachswürfeln": {
+                emoji: "🥣", category: "suppe", categoryLabel: "Suppen & Eintöpfe", time: 25, kidsStars: 4, veggie: false,
+                teaser: "Samtige Kartoffel-Rahmsuppe mit zarten, grätenfreien Lachswürfeln.",
+                kidTip: "Die Lachswürfel garen in der heißen Suppe in nur 4 Minuten butterzart.",
+                ingredients: ["700 g Kartoffeln", "1 milde Stange Lauch (heller Teil)", "900 ml Gemüsebrühe", "150 ml Sahne", "250 g Lachsfilet (ohne Haut & Gräten, gewürfelt)", "Dill & Croutons"],
+                instructions: ["Kartoffelwürfel und Lauchringe in der Brühe 18 Min. weich kochen.", "Mit Sahne fein pürieren und mild abschmecken.", "Lachswürfel in die heiße (nicht mehr sprudelnd kochende) Suppe legen, 4 Min. gar ziehen lassen und mit Croutons servieren."]
+            }
+        };
+
+        // === STATE & STORAGE ===
+        const STORAGE_CUSTOM_KEY = 'schlemmerSwipe_customRecipes_v1';
+        const STORAGE_FAV_KEY = 'schlemmerSwipe_favorites_v1';
+
+        let customRecipes = {};
+        let favorites = [];
+        let recipes = {};
+        let activeFilter = 'all';
+        let filteredDeck = [];
+        let deckIndex = 0;
         let currentMeal = "";
+        let currentPortions = 4;
+
+        function loadState() {
+            try {
+                const storedCustom = localStorage.getItem(STORAGE_CUSTOM_KEY);
+                if (storedCustom) customRecipes = JSON.parse(storedCustom) || {};
+            } catch (e) { customRecipes = {}; }
+
+            try {
+                const storedFav = localStorage.getItem(STORAGE_FAV_KEY);
+                if (storedFav) favorites = JSON.parse(storedFav) || [];
+            } catch (e) { favorites = []; }
+
+            recipes = Object.assign({}, defaultRecipes, customRecipes);
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_CUSTOM_KEY, JSON.stringify(customRecipes));
+                localStorage.setItem(STORAGE_FAV_KEY, JSON.stringify(favorites));
+            } catch (e) {}
+            updateCounters();
+        }
 
         function esc(s) {
             return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        function hasRecipe(name) { return name in recipes; }
+        function shuffle(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function matchesFilter(mealName, filter) {
+            const r = recipes[mealName];
+            if (!r) return true;
+            if (filter === 'all') return true;
+            if (filter === 'schnell') return (r.time || 30) <= 25;
+            if (filter === 'veggie') return !!r.veggie;
+            return r.category === filter;
+        }
+
+        function rebuildDeck() {
+            const allNames = Object.keys(recipes).filter(name => matchesFilter(name, activeFilter));
+            filteredDeck = shuffle(allNames);
+            deckIndex = 0;
+            updateCounters();
+            updateDeckStatus();
+        }
+
+        function updateCounters() {
+            document.getElementById('fav-count').textContent = favorites.length;
+            document.getElementById('total-count').textContent = Object.keys(recipes).length;
+        }
+
+        function updateDeckStatus() {
+            const count = filteredDeck.length;
+            const statusEl = document.getElementById('deck-status');
+            if (count === 0) {
+                statusEl.textContent = "Keine Gerichte in diesem Filter gefunden";
+            } else {
+                statusEl.textContent = `${count} kindgerechte Familiengerichte im Stapel (Karte ${deckIndex + 1} von ${count})`;
+            }
+        }
+
+        function setFilter(filter) {
+            activeFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            // Falls wir im Rezeptmodus sind, zurück zum Wischen
+            if (document.getElementById('recipe-screen').style.display === 'flex') {
+                document.getElementById('recipe-screen').style.display = 'none';
+                document.getElementById('swipe-screen').style.display = 'flex';
+            }
+            rebuildDeck();
+            createCard();
+        }
+
+        function renderStars(count) {
+            const n = Math.max(1, Math.min(5, count || 5));
+            return "⭐".repeat(n);
+        }
 
         function createCard() {
-            const container = document.getElementById('tinder-container');
-            container.innerHTML = '';
-            
-            if(meals.length === 0) {
+            const stage = document.getElementById('card-stage');
+            stage.innerHTML = '';
+
+            if (filteredDeck.length === 0) {
                 currentMeal = "";
-                container.innerHTML = '<div class="tinder-card"><div class="meal-text">Kochbuch ist leer!</div></div>';
+                stage.innerHTML = `
+                    <div class="meal-card" style="justify-content:center;">
+                        <div class="meal-emoji">🍽️</div>
+                        <div class="meal-title">Keine Gerichte im Filter</div>
+                        <p class="meal-teaser">Wähle oben einen anderen Filter aus oder füge ein eigenes Familiengericht hinzu.</p>
+                    </div>`;
                 return;
             }
 
-            currentMeal = meals[Math.floor(Math.random() * meals.length)];
+            if (deckIndex >= filteredDeck.length) {
+                filteredDeck = shuffle(filteredDeck);
+                deckIndex = 0;
+            }
+
+            currentMeal = filteredDeck[deckIndex];
+            updateDeckStatus();
+
+            const r = recipes[currentMeal] || {};
+            const isFav = favorites.includes(currentMeal);
+            const badges = [];
+            if ((r.time || 30) <= 25) badges.push("⚡ Schnell");
+            if (r.veggie) badges.push("🌱 Vegetarisch");
+            if (isFav) badges.push("⭐ Auf Merkliste");
+            if (r.custom) badges.push("👨‍👩‍👧 Eigenes Rezept");
 
             const card = document.createElement('div');
-            card.className = 'tinder-card';
-            const hasData = hasRecipe(currentMeal);
-            const indicator = hasData ? '📖' : '❓';
+            card.className = 'meal-card';
             card.innerHTML = `
-                <div class="stamp stamp-nope" id="stamp-nope">NÄÄÄ!</div>
+                <div class="stamp stamp-nope" id="stamp-nope">WEITER</div>
                 <div class="stamp stamp-like" id="stamp-like">LECKER!</div>
-                <div class="meal-text">${indicator} ${esc(currentMeal)}</div>
+                <div class="card-top-meta">
+                    <span class="cat-tag">${esc(r.categoryLabel || 'Familiengericht')}</span>
+                    <span class="time-tag">⏱️ ca. ${esc(r.time || 25)} Min.</span>
+                </div>
+                <div class="card-center">
+                    <div class="meal-emoji">${esc(r.emoji || '🍽️')}</div>
+                    <div class="meal-title">${esc(currentMeal)}</div>
+                    <p class="meal-teaser">${esc(r.teaser || 'Kindgerechtes Familiengericht mit Schritt-für-Schritt-Anleitung.')}</p>
+                </div>
+                <div class="card-bottom-meta">
+                    <div class="kids-rating">👧👦 Kinder-Hitfaktor: ${renderStars(r.kidsStars)}</div>
+                    <div class="badge-row">
+                        ${badges.map(b => `<span class="mini-badge">${esc(b)}</span>`).join('')}
+                    </div>
+                </div>
             `;
-            container.appendChild(card);
-
+            stage.appendChild(card);
             initSwipe(card);
         }
 
@@ -331,163 +1545,373 @@
             let startX = 0, currentX = 0, isDragging = false, moved = false;
             const stampNope = card.querySelector('#stamp-nope');
             const stampLike = card.querySelector('#stamp-like');
-            const threshold = 100;
+            const threshold = 95;
+
+            const onPointerMove = (e) => {
+                if (!isDragging) return;
+                currentX = e.clientX - startX;
+                if (Math.abs(currentX) > 6) moved = true;
+                const rotate = currentX * 0.05;
+                card.style.transform = `translate(${currentX}px, 0) rotate(${rotate}deg)`;
+                stampLike.style.opacity = currentX > 20 ? Math.min(1, currentX / 100) : 0;
+                stampNope.style.opacity = currentX < -20 ? Math.min(1, Math.abs(currentX) / 100) : 0;
+            };
+
+            const onPointerUp = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                document.removeEventListener('pointermove', onPointerMove);
+                document.removeEventListener('pointerup', onPointerUp);
+
+                if (!moved) {
+                    card.style.transition = 'transform 0.25s ease-out';
+                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                    stampLike.style.opacity = 0;
+                    stampNope.style.opacity = 0;
+                    currentX = 0;
+                    if (currentMeal) showRecipe(currentMeal);
+                    return;
+                }
+
+                if (currentX > threshold) {
+                    completeSwipeRight(card);
+                } else if (currentX < -threshold) {
+                    completeSwipeLeft(card);
+                } else {
+                    card.style.transition = 'transform 0.25s ease-out';
+                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                    stampLike.style.opacity = 0;
+                    stampNope.style.opacity = 0;
+                }
+                currentX = 0;
+            };
 
             card.addEventListener('pointerdown', (e) => {
                 isDragging = true;
                 moved = false;
                 startX = e.clientX;
                 card.style.transition = 'none';
-            });
-
-            document.addEventListener('pointermove', (e) => {
-                if (!isDragging) return;
-                currentX = e.clientX - startX;
-                if (Math.abs(currentX) > 6) moved = true;
-                const rotate = currentX * 0.05;
-                card.style.transform = `translate(${currentX}px, 0) rotate(${rotate}deg)`;
-                stampLike.style.opacity = currentX > 20 ? currentX / 100 : 0;
-                stampNope.style.opacity = currentX < -20 ? Math.abs(currentX) / 100 : 0;
-            });
-
-            document.addEventListener('pointerup', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-
-                if (!moved) {
-                    // Tippen (ohne Ziehen) öffnet das Rezept.
-                    card.style.transition = 'transform 0.3s ease-out';
-                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
-                    stampLike.style.opacity = 0;
-                    stampNope.style.opacity = 0;
-                    currentX = 0;
-                    if (currentMeal) showRecipe();
-                    return;
-                }
-
-                if (currentX > threshold) {
-                    // Swipe Rechts = MATCH → Rezept anzeigen
-                    card.style.transition = 'transform 0.4s ease-out';
-                    card.style.transform = `translate(${window.innerWidth}px, 0) rotate(30deg)`;
-                    setTimeout(showRecipe, 300);
-                } else if (currentX < -threshold) {
-                    // Swipe Links = Weiter
-                    card.style.transition = 'transform 0.4s ease-out';
-                    card.style.transform = `translate(-${window.innerWidth}px, 0) rotate(-30deg)`;
-                    setTimeout(createCard, 300);
-                } else {
-                    card.style.transition = 'transform 0.3s ease-out';
-                    card.style.transform = 'translate(0px, 0px) rotate(0deg)';
-                    stampLike.style.opacity = 0;
-                    stampNope.style.opacity = 0;
-                }
-                currentX = 0;
+                document.addEventListener('pointermove', onPointerMove);
+                document.addEventListener('pointerup', onPointerUp);
             });
         }
 
-        // Button-Hilfen
+        function completeSwipeRight(card) {
+            if (!currentMeal) return;
+            if (!favorites.includes(currentMeal)) {
+                favorites.unshift(currentMeal);
+                saveState();
+                renderFavorites();
+            }
+            card.style.transition = 'transform 0.35s ease-out';
+            card.style.transform = `translate(${window.innerWidth}px, 0) rotate(26deg)`;
+            const mealToOpen = currentMeal;
+            deckIndex++;
+            setTimeout(() => showRecipe(mealToOpen), 260);
+        }
+
+        function completeSwipeLeft(card) {
+            card.style.transition = 'transform 0.35s ease-out';
+            card.style.transform = `translate(-${window.innerWidth}px, 0) rotate(-26deg)`;
+            deckIndex++;
+            setTimeout(createCard, 260);
+        }
+
         function swipeRight() {
-            const card = document.querySelector('.tinder-card');
+            const card = document.querySelector('.meal-card');
             if (!card || !currentMeal) return;
-            card.style.transition = 'transform 0.4s ease-out';
-            card.style.transform = `translate(${window.innerWidth}px, 0) rotate(30deg)`;
-            setTimeout(showRecipe, 300);
+            completeSwipeRight(card);
         }
+
         function swipeLeft() {
-            const card = document.querySelector('.tinder-card');
-            if (!card) return;
-            card.style.transition = 'transform 0.4s ease-out';
-            card.style.transform = `translate(-${window.innerWidth}px, 0) rotate(-30deg)`;
-            setTimeout(createCard, 300);
+            const card = document.querySelector('.meal-card');
+            if (!card || !currentMeal) return;
+            completeSwipeLeft(card);
+        }
+
+        function openCurrentRecipe() {
+            if (currentMeal) showRecipe(currentMeal);
+        }
+
+        // === PORTIONS-SKALIERUNG FÜR ZUTATEN ===
+        function scaleIngredient(line, portions) {
+            if (portions === 4) return line;
+            const factor = portions / 4;
+            return line.replace(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|EL|TL|Stk\.|Scheiben|Dosen|Dose|Pck\.|Packung|Packungen|Bund|Rolle|Rollen|Gläser|Glas|Würfel)?\b/i, (match, numStr, unit) => {
+                const val = parseFloat(numStr.replace(',', '.'));
+                if (isNaN(val)) return match;
+                let scaled = val * factor;
+                let formatted;
+                if (scaled >= 10) {
+                    formatted = String(Math.round(scaled));
+                } else {
+                    formatted = (Math.round(scaled * 2) / 2).toString().replace('.', ',');
+                }
+                return unit ? `${formatted} ${unit}` : formatted;
+            });
         }
 
         // === RECIPE DISPLAY ===
-        function showRecipe() {
-            if (!currentMeal) return;
-            document.body.classList.add('scrollable');
-            document.getElementById('tinder-screen').style.display = 'none';
+        function showRecipe(mealName) {
+            if (!mealName || !recipes[mealName]) return;
+            currentMeal = mealName;
+            currentPortions = 4;
+
+            document.getElementById('swipe-screen').style.display = 'none';
             const recipeScreen = document.getElementById('recipe-screen');
             recipeScreen.style.display = 'flex';
 
-            const recipe = recipes[currentMeal];
-            document.getElementById('recipe-name').textContent = currentMeal;
+            const r = recipes[mealName];
+            document.getElementById('recipe-emoji').textContent = r.emoji || '🍽️';
+            document.getElementById('recipe-name').textContent = mealName;
 
-            if (recipe) {
-                // Zutaten
-                const ingrList = document.getElementById('recipe-ingredients');
-                ingrList.innerHTML = recipe.ingredients.map(i => `<li>${esc(i)}</li>`).join('');
-                document.getElementById('recipe-ingredients-section').style.display = 'block';
+            const metaBar = document.getElementById('recipe-meta-bar');
+            metaBar.innerHTML = `
+                <span class="cat-tag">${esc(r.categoryLabel || 'Familiengericht')}</span>
+                <span class="time-tag">⏱️ ${esc(r.time || 25)} Min.</span>
+                <span class="time-tag">👧👦 ${renderStars(r.kidsStars)}</span>
+                ${r.veggie ? '<span class="cat-tag" style="color:#7ef9a9; border-color:#7ef9a9;">🌱 Vegetarisch</span>' : ''}
+            `;
 
-                // Zubereitung
-                const instrList = document.getElementById('recipe-instructions');
-                instrList.innerHTML = recipe.instructions.map(i => `<li>${esc(i)}</li>`).join('');
-                document.getElementById('recipe-instructions-section').style.display = 'block';
+            const tipBox = document.getElementById('recipe-kid-tip');
+            if (r.kidTip) {
+                tipBox.style.display = 'block';
+                tipBox.innerHTML = `💡 <strong>Familien-Tipp:</strong> ${esc(r.kidTip)}`;
             } else {
-                document.getElementById('recipe-ingredients-section').style.display = 'none';
-                document.getElementById('recipe-instructions-section').style.display = 'none';
-                const instrList = document.getElementById('recipe-instructions');
-                instrList.innerHTML = '<li style="text-align:center; color: var(--accent-pink);">⚠️ Noch kein Rezept hinterlegt. Bald!</li>';
-                document.getElementById('recipe-instructions-section').style.display = 'block';
+                tipBox.style.display = 'none';
             }
+
+            renderRecipeIngredients();
+
+            const instrList = document.getElementById('recipe-instructions');
+            instrList.innerHTML = (r.instructions || []).map(step => `<li>${esc(step)}</li>`).join('');
+
+            updateFavToggleButton();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderRecipeIngredients() {
+            const r = recipes[currentMeal];
+            if (!r) return;
+            document.getElementById('portion-display').textContent = currentPortions;
+            const ingrList = document.getElementById('recipe-ingredients');
+            ingrList.innerHTML = (r.ingredients || []).map(item => {
+                const scaled = scaleIngredient(item, currentPortions);
+                return `<li onclick="this.classList.toggle('checked')"><span>▢</span> <span>${esc(scaled)}</span></li>`;
+            }).join('');
+        }
+
+        function changePortions(delta) {
+            const next = currentPortions + delta;
+            if (next < 1 || next > 16) return;
+            currentPortions = next;
+            renderRecipeIngredients();
+        }
+
+        function updateFavToggleButton() {
+            const btn = document.getElementById('fav-toggle-btn');
+            const isFav = favorites.includes(currentMeal);
+            btn.textContent = isFav ? '⭐ Auf der Merkliste (Entfernen)' : '⭐ Auf Merkliste setzen';
+        }
+
+        function toggleFavoriteCurrent() {
+            if (!currentMeal) return;
+            const idx = favorites.indexOf(currentMeal);
+            if (idx >= 0) {
+                favorites.splice(idx, 1);
+            } else {
+                favorites.unshift(currentMeal);
+            }
+            saveState();
+            renderFavorites();
+            updateFavToggleButton();
         }
 
         function backToSwipe() {
-            document.body.classList.remove('scrollable');
             document.getElementById('recipe-screen').style.display = 'none';
-            document.getElementById('tinder-screen').style.display = 'flex';
+            document.getElementById('swipe-screen').style.display = 'flex';
             createCard();
         }
 
-        // === KOCHBUCH SETTINGS ===
-        function saveMeals() {
-            localStorage.setItem('princessMeals', JSON.stringify(meals));
-            renderList();
-        }
+        // === DRAWERS (FAVORITEN & KATALOG) ===
+        function toggleDrawer(which) {
+            const favDrawer = document.getElementById('favorites-drawer');
+            const catDrawer = document.getElementById('catalog-drawer');
+            const btnFav = document.getElementById('btn-favorites');
+            const btnCat = document.getElementById('btn-catalog');
 
-        function renderList() {
-            const listContainer = document.getElementById('list-container');
-            listContainer.innerHTML = '';
-            meals.forEach((meal, index) => {
-                const li = document.createElement('li');
-                const hasData = hasRecipe(meal);
-                const span = document.createElement('span');
-                span.textContent = `${hasData ? '📖' : '❓'} ${meal}`;
-                const btn = document.createElement('button');
-                btn.className = 'del-btn';
-                btn.textContent = '❌';
-                btn.addEventListener('click', () => removeMeal(index));
-                li.appendChild(span);
-                li.appendChild(btn);
-                listContainer.appendChild(li);
-            });
-        }
-
-        function addMeal() {
-            const input = document.getElementById('newMealInput');
-            const newMeal = input.value.trim();
-            if (newMeal !== '') {
-                meals.push(newMeal);
-                saveMeals();
-                input.value = '';
+            if (which === 'favorites') {
+                const opening = !favDrawer.classList.contains('open');
+                favDrawer.classList.toggle('open', opening);
+                catDrawer.classList.remove('open');
+                btnFav.classList.toggle('active', opening);
+                btnCat.classList.remove('active');
+                if (opening) renderFavorites();
+            } else if (which === 'catalog') {
+                const opening = !catDrawer.classList.contains('open');
+                catDrawer.classList.toggle('open', opening);
+                favDrawer.classList.remove('open');
+                btnCat.classList.toggle('active', opening);
+                btnFav.classList.remove('active');
+                if (opening) renderCatalog();
             }
         }
 
-        function removeMeal(index) {
-            meals.splice(index, 1);
-            saveMeals();
+        function renderFavorites() {
+            const list = document.getElementById('favorites-list');
+            if (favorites.length === 0) {
+                list.innerHTML = '<li style="justify-content:center; color:var(--text-muted); padding:14px;">Noch keine Favoriten gemerkt. Wische bei einem leckeren Gericht nach rechts (❤️)!</li>';
+                return;
+            }
+            list.innerHTML = favorites.map((name, idx) => {
+                const r = recipes[name] || {};
+                return `
+                    <li>
+                        <div class="catalog-item-main" onclick="openFromList('${esc(name)}')">
+                            <span class="catalog-item-title">${esc(r.emoji || '🍽️')} ${esc(name)}</span>
+                            <span class="catalog-item-sub">${esc(r.categoryLabel || 'Familiengericht')} • ⏱️ ${esc(r.time || 25)} Min.</span>
+                        </div>
+                        <button class="icon-btn" onclick="removeFavorite(${idx})" title="Aus Merkliste entfernen">✕</button>
+                    </li>
+                `;
+            }).join('');
         }
 
-        function toggleSettings() {
-            const panel = document.getElementById('settings-panel');
-            panel.style.display = panel.style.display === "block" ? "none" : "block";
+        function removeFavorite(idx) {
+            favorites.splice(idx, 1);
+            saveState();
+            renderFavorites();
+            createCard();
         }
 
-        // Start!
-        // Detect if embedded in iframe (e.g. Home Assistant) → add padding for nav bar
+        function clearFavorites() {
+            favorites = [];
+            saveState();
+            renderFavorites();
+            createCard();
+        }
+
+        function pickRandomFavorite() {
+            if (favorites.length === 0) return;
+            const pick = favorites[Math.floor(Math.random() * favorites.length)];
+            toggleDrawer('favorites');
+            showRecipe(pick);
+        }
+
+        function renderCatalog() {
+            const list = document.getElementById('catalog-list');
+            const query = (document.getElementById('search-input').value || '').trim().toLowerCase();
+            const names = Object.keys(recipes).sort((a, b) => a.localeCompare(b, 'de'));
+
+            const matches = names.filter(name => {
+                if (!query) return true;
+                const r = recipes[name];
+                const inTitle = name.toLowerCase().includes(query);
+                const inIngr = (r.ingredients || []).some(i => i.toLowerCase().includes(query));
+                const inCat = (r.categoryLabel || '').toLowerCase().includes(query);
+                return inTitle || inIngr || inCat;
+            });
+
+            if (matches.length === 0) {
+                list.innerHTML = '<li style="justify-content:center; color:var(--text-muted); padding:14px;">Kein passendes Gericht gefunden.</li>';
+                return;
+            }
+
+            list.innerHTML = matches.map(name => {
+                const r = recipes[name];
+                const isCustom = !!r.custom;
+                return `
+                    <li>
+                        <div class="catalog-item-main" onclick="openFromList('${esc(name)}')">
+                            <span class="catalog-item-title">${esc(r.emoji || '🍽️')} ${esc(name)}</span>
+                            <span class="catalog-item-sub">${esc(r.categoryLabel || 'Familiengericht')} • ⏱️ ${esc(r.time || 25)} Min. • ${renderStars(r.kidsStars)}</span>
+                        </div>
+                        ${isCustom ? `<button class="icon-btn" onclick="deleteCustomMeal('${esc(name)}')" title="Eigenes Rezept löschen">🗑️</button>` : ''}
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function openFromList(mealName) {
+            document.getElementById('favorites-drawer').classList.remove('open');
+            document.getElementById('catalog-drawer').classList.remove('open');
+            document.getElementById('btn-favorites').classList.remove('active');
+            document.getElementById('btn-catalog').classList.remove('active');
+            showRecipe(mealName);
+        }
+
+        function toggleCustomForm() {
+            document.getElementById('custom-form').classList.toggle('open');
+        }
+
+        function saveCustomMeal() {
+            const name = document.getElementById('custom-name').value.trim();
+            if (!name) return;
+            const cat = document.getElementById('custom-cat').value;
+            const catLabels = {
+                pasta: "Pasta & Klöße",
+                kartoffel: "Kartoffel-Hits",
+                ofen: "Ofen & Pfanne",
+                suppe: "Suppen & Eintöpfe",
+                suess: "Süße Hauptgerichte"
+            };
+            const catEmojis = {
+                pasta: "🍝",
+                kartoffel: "🥔",
+                ofen: "🥘",
+                suppe: "🥣",
+                suess: "🥞"
+            };
+            const time = parseInt(document.getElementById('custom-time').value, 10) || 25;
+            const veggie = document.getElementById('custom-veggie').checked;
+            const ingrRaw = document.getElementById('custom-ingr').value.trim();
+            const stepsRaw = document.getElementById('custom-steps').value.trim();
+
+            const ingredients = ingrRaw ? ingrRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : ["Zutaten nach Familienrezept"];
+            const instructions = stepsRaw ? stepsRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : ["Nach Familienrezept frisch zubereiten und genießen!"];
+
+            customRecipes[name] = {
+                emoji: catEmojis[cat] || "🍽️",
+                category: cat,
+                categoryLabel: catLabels[cat] || "Familiengericht",
+                time: time,
+                kidsStars: 5,
+                veggie: veggie,
+                teaser: "Eigenes Familien-Lieblingsgericht aus eurem Kochbuch.",
+                kidTip: "Selbst angelegtes Familienrezept.",
+                ingredients: ingredients,
+                instructions: instructions,
+                custom: true
+            };
+
+            recipes = Object.assign({}, defaultRecipes, customRecipes);
+            saveState();
+            rebuildDeck();
+            renderCatalog();
+
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-ingr').value = '';
+            document.getElementById('custom-steps').value = '';
+            document.getElementById('custom-form').classList.remove('open');
+        }
+
+        function deleteCustomMeal(name) {
+            delete customRecipes[name];
+            recipes = Object.assign({}, defaultRecipes, customRecipes);
+            const favIdx = favorites.indexOf(name);
+            if (favIdx >= 0) favorites.splice(favIdx, 1);
+            saveState();
+            rebuildDeck();
+            renderCatalog();
+            createCard();
+        }
+
+        // === INIT ===
         if (window.self !== window.top) {
             document.body.classList.add('embedded');
         }
-        renderList();
+        loadState();
+        rebuildDeck();
         createCard();
     </script>
 
